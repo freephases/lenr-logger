@@ -3,7 +3,7 @@
 #define plotlyUserName "username"
 #define plotlyPassword "password"
 #define plotlyFilename "filename"
-//token are 11 chars
+//token are 10 chars
 //tokens pipe delimited eg: dgfhr647sgh|dhfjruskw8f| 
 // don't forget leading pipe                       ^ - it's a bug
 #define plotlyTokens "xxxxxxxxxxx|xxxxxxxxxxx|xxxxxxxxxxx|xxxxxxxxxxx|"

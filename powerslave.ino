@@ -1,3 +1,7 @@
+/**
+* Power Slave, gets power values over serial from mini pro running 
+* this: https://github.com/freephases/power-serial-slave.git
+*/
 short psPos = 0; // position in read buffer
 char psBuffer[ROB_WS_MAX_STRING_DATA_LENGTH + 1];
 char psInByte = 0;

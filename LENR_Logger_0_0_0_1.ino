@@ -54,7 +54,7 @@
 #define DEBUG_SLAVE_SERIAL 0
 
 //use a slave device able to read CSV data or set to 0 to use python example format TODO
-#define PAD_CSV_SLAVE 1 // use wifi slave
+#define PAD_CSV_SLAVE 1 // use wifi slave see https://github.com/freephases/wifi-plotly-slave
 #define RAW_CSV 2 // send raw CSV data to serial 0, DEBUG_TO_SERIAL and DEBUG_SLAVE_SERIAL must be 0
 
 #define DATA_LOGGERING_MODE PAD_CSV_SLAVE

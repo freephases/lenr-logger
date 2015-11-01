@@ -226,4 +226,9 @@ void setupWifiSlave() {
     Serial2.begin(9600);//salve feed back if you wire up 0 and 1 back to mega serial 2 ports
 }
 
+#else
+//any other loggin mode...
+
+// ..
+
 #endif

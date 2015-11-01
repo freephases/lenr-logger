@@ -85,12 +85,18 @@ const unsigned long sendDataInterval = 15000;//send data every XX secs
 unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
 OnOff connectionOkLight(30); // nice led light so we know it's working
 
+#if DATA_LOGGERING_MODE == RAW_CSV
+//when in raw CSV mode always send data
+boolean canSendData() {
+  return true;
+}
+#endif
 
 /**
 * Send the data to slave or serial, depending on DATA_LOGGERING_MODE
 */
 void sendData() {
-  if (canSendData && (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval)) {
+  if (canSendData() && (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval)) {
     sendDataMillis = millis();
     connectionOkLight.off();
 

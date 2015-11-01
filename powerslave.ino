@@ -3,7 +3,7 @@
 * this: https://github.com/freephases/power-serial-slave.git
 */
 short psPos = 0; // position in read buffer
-char psBuffer[ROB_WS_MAX_STRING_DATA_LENGTH + 1];
+char psBuffer[MAX_STRING_DATA_LENGTH + 1];
 char psInByte = 0;
 typedef struct {
   float power, Vrms, Irms;
@@ -55,7 +55,7 @@ void processPowerSlaveSerial()
     psBuffer[psPos] = psInByte;
     psPos++;
 
-    if (psInByte == '\n' || psPos == ROB_WS_MAX_STRING_DATA_LENGTH) //end of max field length
+    if (psInByte == '\n' || psPos == MAX_STRING_DATA_LENGTH) //end of max field length
     {
       psBuffer[psPos - 1] = 0; // delimited
       processPowerSlaveResponse();

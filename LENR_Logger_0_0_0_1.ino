@@ -6,11 +6,13 @@
 * Version: 0.0.0.1-alpha-blue-pants - NOT COMPLETE YET, W.I.P.W.D.Y.E!
 *
 * Uses:
-*  Arduino Mega ATmega1280
-*  max6675 with thermocouple x 2
-*  Uno runnning SerialToWifiRelay program and old style wifi card (rev1) - THE wifi SLAVE
-*  5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
-*  mini pro running OpenEnergyMonitor SMD card using analog ports 0-1 only - the power salve
+*  - Arduino Mega ATmega1280
+*  - max6675 with thermocouple x 2
+*  - Uno runnning SerialToWifiRelay program and old style wifi card (rev1) - The wifi slave
+*    runing https://github.com/freephases/wifi-plotly-slave
+*  - 5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
+*  - Arduino Pro Mini running OpenEnergyMonitor SMD card using analog ports 0-1 only - the power salve
+* running https://github.com/freephases/power-serial-slave.git
 *  
 *  Copyright (c) 2015 free phases
 *  
@@ -50,63 +52,42 @@
 **/
 // send debug info to serial - 1 is on anything else is off
 #define DEBUG_TO_SERIAL 1
-//debug raw serial output of the slave if you add jumpers to rx and tx od slave to tx and rx of the mega
+//debug raw serial output of the slave if you add jumpers to rx and tx of slave to tx and rx of the mega serial 2 ports
 #define DEBUG_SLAVE_SERIAL 0
 
-//use a slave device able to read CSV data or set to 0 to use python example format TODO
-#define PAD_CSV_SLAVE 1 // use wifi slave see https://github.com/freephases/wifi-plotly-slave
-#define RAW_CSV 2 // send raw CSV data to serial 0, DEBUG_TO_SERIAL and DEBUG_SLAVE_SERIAL must be 0
+/**
+* Logging option flags:
+*/
+#define PAD_CSV_SLAVE 1 // flay to use for wifi slave, see https://github.com/freephases/wifi-plotly-slave
+#define RAW_CSV 2 // flag for using raw CSV data to serial 0, DEBUG_TO_SERIAL and DEBUG_SLAVE_SERIAL must be 0
 
+/**
+* Logging option
+*/
 #define DATA_LOGGERING_MODE PAD_CSV_SLAVE
 
-#define ROB_WS_MAX_STRING_DATA_LENGTH 150
-//how long do we want the interval between sending data to plotly to be
+/**
+* Maxium length of data reviced from slaves for 1 record/line
+*/
+#define MAX_STRING_DATA_LENGTH 150
+
+
+/**
+* Data send interval
+* how long do we want the interval between sending data
+*/
 const unsigned long sendDataInterval = 15000;//send data every 30 secs
 
-// see other files in tap above for specific sensor settings and mnay other things
 
 /**
 * global vars for run time, please do not edit
 */
 unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
+OnOff connectionOkLight(30); // nice led light so we know it's working
 
-
-OnOff connectionOkLight(30); // nice light so we know it's working
-
-//lcd - cannot get to work with my mega so left for now...
-/*LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
-
-
-void printToLcdWithDelay(byte lineNum, char* message, int delayTime = 350) {
-  lcd.setCursor(0, lineNum);
-  lcd.print(message);
-  lcd.print("                 ");// clear line
-  delay(delayTime);
-}*/
 
 /**
-* Return a value with in a CSV string where index is the 
-*/
-String getValue(String data, char separator, int index)
-{
-  int found = 0;
-  int strIndex[] = {
-    0, -1        };
-  int maxIndex = data.length()-1;
-
-  for(int i=0; i<=maxIndex && found<=index; i++){
-    if(data.charAt(i)==separator || i==maxIndex){
-      found++;
-      strIndex[0] = strIndex[1]+1;
-      strIndex[1] = (i == maxIndex) ? i+1 : i;
-    }
-  }
-
-  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
-}
-
-/**
-* Send the traces to our plotly stream
+* Send the data to slave or serial, depending on DATA_LOGGERING_MODE
 */
 void sendData() {
   if (canSendData && (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval)) {
@@ -155,10 +136,14 @@ void readSensors() {
  
 }
 
+/**
+* Process reuired incomming slave serial data
+*/
 void manageSerial() {
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE  
   processWifiSlaveSerial();
 #endif
+
   processPowerSlaveSerial();
 }
 
@@ -183,10 +168,6 @@ void setup() {
   setupPressure();
   powerSlaveSetup();
   
-  //lcd.begin(16, 2);
-  //printToLcdWithDelay(0, "Starting...  ");
-  //printToLcdWithDelay(1, "     ...  ");
-  
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE  
     setupWifiSlave();
 #endif
@@ -204,7 +185,5 @@ void loop() {
   sendData();
   if (DEBUG_SLAVE_SERIAL == 1) {
     processDebugSlaveSerial();// for debug only
-  }
-  
- 
+  } 
 }

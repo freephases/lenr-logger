@@ -7,7 +7,7 @@
 #include "plotlysettings.h"
 
 short pos = 0; // position in read buffer
-char buffer[ROB_WS_MAX_STRING_DATA_LENGTH+1];
+char buffer[MAX_STRING_DATA_LENGTH+1];
 char inByte = 0;
 boolean waitingForResponse = false;
 boolean theStreamHasStarted = false;
@@ -79,7 +79,7 @@ void processWifiSlaveSerial()
     //   Serial.println(inByte); 
     pos++;
     //Serial.println(inByte);
-    if (inByte == '\n' || pos==ROB_WS_MAX_STRING_DATA_LENGTH) //end of max field length
+    if (inByte == '\n' || pos==MAX_STRING_DATA_LENGTH) //end of max field length
     {
       buffer[pos-1] = 0; // delimited      
       processSalveResponse(); 

@@ -8,10 +8,10 @@
 * Uses:
 *  - Arduino Mega ATmega1280
 *  - max6675 with thermocouple x 2
-*  - Uno runnning SerialToWifiRelay program and old style wifi card (rev1) - The wifi slave
+*  - Uno runnning with old style wifi card (rev1) - The wifi slave
 *    runing https://github.com/freephases/wifi-plotly-slave
 *  - 5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
-*  - Arduino Pro Mini running OpenEnergyMonitor SMD card using analog ports 0-1 only - the power salve
+*  - Arduino Pro Mini running OpenEnergyMonitor SMD card using analog ports 0-1 only - the power/emon slave
 * running https://github.com/freephases/power-serial-slave.git
 *  
 *  Copyright (c) 2015 free phases
@@ -102,10 +102,10 @@ OnOff connectionOkLight(30);
 * Send the data to slave or serial, depending on DATA_LOGGERING_MODE
 */
 void sendData() {
-  if (canSendData() && (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval)) {
+  if (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval) {
     sendDataMillis = millis();
     
-#if DEBUG_SLAVE_SERIAL == 1
+#if DEBUG_TO_SERIAL == 1
       //Dump debug info
       Serial.print("Reactor core temp: ");
       Serial.print(getThermocoupleAvgCelsius1());
@@ -120,16 +120,16 @@ void sendData() {
       Serial.print(getPower());
       Serial.println("W");
 #endif
-    
+      if (canSendData()) {   
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
-  connectionOkLight.off(); // light is turned on when streaming starts and get an OK from WifiSlave once plot is sent to plotly
-  sendPlotlyDataToWifiSlave();
+          connectionOkLight.off(); // light is turned on when streaming starts and get an OK from WifiSlave once plot is sent to plotly
+          sendPlotlyDataToWifiSlave();
 #else if DATA_LOGGERING_MODE == RAW_CSV
-  connectionOkLight.on();
-  printRawCsv();
-  connectionOkLight.off();  
+          connectionOkLight.on();
+          printRawCsv();
+          connectionOkLight.off();  
 #endif
-        
+      }        
   }
 }
 

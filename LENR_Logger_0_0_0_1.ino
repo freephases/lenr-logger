@@ -76,7 +76,7 @@
 * Data send interval
 * how long do we want the interval between sending data
 */
-const unsigned long sendDataInterval = 15000;//send data every 30 secs
+const unsigned long sendDataInterval = 15000;//send data every XX secs
 
 
 /**

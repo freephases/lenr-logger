@@ -69,7 +69,7 @@
 /**
 * Maxium length of data reviced from slaves for 1 record/line
 */
-#define MAX_STRING_DATA_LENGTH 150
+#define MAX_STRING_DATA_LENGTH 160
 
 
 /**

@@ -153,7 +153,7 @@ void readSensors() {
 }
 
 /**
-* Process reuired incomming slave serial data
+* Process incomming slave serial data
 */
 void manageSerial() {
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE  

@@ -3,7 +3,7 @@
 * LENR logger
 *
 * Oct 2015
-* Version: 0.0.0.1-alpha-blue-pants - NOT COMPLETE YET, W.I.P.W.D.Y.E!
+* Version: 0.0.1.0
 *
 * Uses:
 *  - Arduino Mega ATmega1280
@@ -51,7 +51,7 @@
 * Settings
 **/
 // send debug info to serial - 1 is on anything else is off
-#define DEBUG_TO_SERIAL 1
+#define DEBUG_TO_SERIAL 0
 //debug raw serial output of the slave if you add jumpers to rx and tx of slave to tx and rx of the mega serial 2 ports
 #define DEBUG_SLAVE_SERIAL 0
 
@@ -59,8 +59,8 @@
 * Logging option flags:
 */
 #define PAD_CSV_SLAVE 1 // flay to use for wifi slave, see https://github.com/freephases/wifi-plotly-slave
-#define RAW_CSV 2 // flag for using raw CSV data to serial 0, DEBUG_TO_SERIAL and DEBUG_SLAVE_SERIAL must be 0
-
+#define RAW_CSV 2 // flag for using raw CSV data to serial 0, DEBUG_TO_SERIAL and DEBUG_SLAVE_SERIAL must be set to 0
+#define NO_LOGGING 0 //just use debugging mode, be sure to set DEBUG_TO_SERIAL to 1
 /**
 * Logging option
 */
@@ -105,7 +105,8 @@ void sendData() {
   if (canSendData() && (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval)) {
     sendDataMillis = millis();
     
-    if (DEBUG_TO_SERIAL == 1) {
+#if DEBUG_SLAVE_SERIAL == 1
+      //Dump debug info
       Serial.print("Reactor core temp: ");
       Serial.print(getThermocoupleAvgCelsius1());
       Serial.println(" Celsius");
@@ -118,7 +119,7 @@ void sendData() {
       Serial.print("Power: ");
       Serial.print(getPower());
       Serial.println("W");
-    }
+#endif
     
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
   connectionOkLight.off(); // light is turned on when streaming starts and get an OK from WifiSlave once plot is sent to plotly
@@ -172,10 +173,12 @@ void doMainLoops() {
 * Set up
 */
 void setup() {
-  Serial.begin(9600); // main serial ports used for debugging only so far
-  connectionOkLight.on(); //tell the world i'm alive
-  Serial.println("LENR logger"); // send some info on who we are
-  Serial.println(""); // clear a line for connecting serial in case we are doig that sort of thing ;)
+  Serial.begin(9600); // main serial ports used for debugging or sending raw CSV over USB
+  connectionOkLight.on(); //tell the world we are alive
+  if (DEBUG_TO_SERIAL==1) {
+    Serial.println("LENR logger"); // send some info on who we are
+    Serial.println("");
+  }
   
   //Call our sensors setup funcs
   setupPressure();
@@ -196,7 +199,7 @@ void setup() {
 void loop() {
   doMainLoops();
   sendData();
-  if (DEBUG_SLAVE_SERIAL == 1) {
+#if DEBUG_SLAVE_SERIAL == 1
     processDebugSlaveSerial();// for debug only
-  } 
+#endif
 }

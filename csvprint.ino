@@ -2,7 +2,9 @@
 * Prints out results to serial as CSV, can be changed to match any format 
 * to interface with anything via usb ports on the mega
 */
-#define csvDelimiter ','
+#if DATA_LOGGERING_MODE == RAW_CSV
+
+#define csvDelimiter ","
 
 void printRawCsv() {    
   Serial.print(millis());  
@@ -15,3 +17,5 @@ void printRawCsv() {
   Serial.print(csvDelimiter);
   Serial.print(getPressurePsi());
 }
+
+#endif

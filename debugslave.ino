@@ -1,7 +1,9 @@
 /**
 * LENR logger slave debug interface
 */
-char slaveInByte = 0;
+#if DEBUG_SLAVE_SERIAL == 1
+
+char slaveInByte = 0;//to hold in coming byte
 
 void relaySerial2ToSerial()
 {
@@ -9,24 +11,23 @@ void relaySerial2ToSerial()
     while (Serial2.available() > 0)
     {
       // read the incoming byte from slave and dump to our main serial
-      slaveInByte = Serial2.read();
-      Serial.print(slaveInByte);
+      slaveInByte = Serial2.read();      
+      Serial.print(slaveInByte); //dump stright to serial 0 
     
     }
 }
 /**
- * Process data sent vy master
+ * Select debug print method, if any at all
  */
 void processDebugSlaveSerial()
 {
-  
-  switch (DATA_LOGGERING_MODE) {
-    case PAD_CSV_SLAVE: 
-        relaySerial2ToSerial();
-    break;
-    default:
-      Serial.println("processDebugSlaveSerialin debugslave is not complete");
-  }
+    switch (DATA_LOGGERING_MODE) {
+      case PAD_CSV_SLAVE: 
+          relaySerial2ToSerial();
+      break;
+      // ..
+    }
 }
 
+#endif
 

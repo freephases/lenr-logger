@@ -1,5 +1,6 @@
 /**
-* Return a value with in a CSV string where index is the 
+* Return a value with in a CSV string where index is the coloumn count, 
+* is zero based, 0=1, 1=2 and so on...
 */
 String getValue(String data, char separator, int index)
 {

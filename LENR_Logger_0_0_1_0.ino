@@ -11,8 +11,8 @@
 *  - Uno runnning with old style wifi card (rev1) - The wifi slave
 *    runing https://github.com/freephases/wifi-plotly-slave
 *  - 5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
-*  - Arduino Pro Mini running OpenEnergyMonitor SMD card using analog ports 0-1 only - the power/emon slave
-* running https://github.com/freephases/power-serial-slave.git
+*  - Arduino Pro Mini with a OpenEnergyMonitor SMD card using analog ports 0-1 only - the power/emon slave
+*    running https://github.com/freephases/power-serial-slave.git
 *  
 *  Copyright (c) 2015 free phases
 *  
@@ -78,16 +78,18 @@
 */
 const unsigned long sendDataInterval = 15000;//send data every XX secs
 
-
-/**
-* global vars for run time, please do not edit
-*/
-unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
-
 /**
 * Led to signal we are working
 */
 OnOff connectionOkLight(30); 
+
+
+/**
+* global vars for run time...
+*/
+unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
+
+
 
 #if DATA_LOGGERING_MODE == RAW_CSV
   /**

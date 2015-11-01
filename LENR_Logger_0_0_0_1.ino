@@ -83,13 +83,19 @@ const unsigned long sendDataInterval = 15000;//send data every XX secs
 * global vars for run time, please do not edit
 */
 unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
-OnOff connectionOkLight(30); // nice led light so we know it's working
+
+/**
+* Led to signal we are working
+*/
+OnOff connectionOkLight(30); 
 
 #if DATA_LOGGERING_MODE == RAW_CSV
-//when in raw CSV mode always send data
-boolean canSendData() {
-  return true;
-}
+  /**
+  * when in raw CSV mode always send data
+  */
+  boolean canSendData() {
+    return true;
+  }
 #endif
 
 /**
@@ -98,8 +104,7 @@ boolean canSendData() {
 void sendData() {
   if (canSendData() && (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval)) {
     sendDataMillis = millis();
-    connectionOkLight.off();
-
+    
     if (DEBUG_TO_SERIAL == 1) {
       Serial.print("Reactor core temp: ");
       Serial.print(getThermocoupleAvgCelsius1());
@@ -116,10 +121,12 @@ void sendData() {
     }
     
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
+  connectionOkLight.off(); // light is turned on when streaming starts and get an OK from WifiSlave once plot is sent to plotly
   sendPlotlyDataToWifiSlave();
-#endif
-#if DATA_LOGGERING_MODE == RAW_CSV
+#else if DATA_LOGGERING_MODE == RAW_CSV
+  connectionOkLight.on();
   printRawCsv();
+  connectionOkLight.off();  
 #endif
         
   }

@@ -135,9 +135,9 @@ void startPlotting(int overWrite) {
 }
 
 /**
-* Send a plot to plotty of int type
+* Send a plot to plotly of int type
 */
-void plotByToken(char *token, char *charType, int value) {  
+void plotByToken(char *token, int value) {  
   if (!theStreamHasStarted) {
     return;
   }  
@@ -145,7 +145,7 @@ void plotByToken(char *token, char *charType, int value) {
  // waitForResponse();//wait for other requests to be dealt with
   
   char buf[100];
-  sprintf(buf, "P|%s|%s|%d|", token, charType, value);// build up request
+  sprintf(buf, "P|%s|%s|%d|", token, "I", value);// build up request
   
   if (DEBUG_TO_SERIAL==1) {
     Serial.println(buf);
@@ -161,9 +161,9 @@ void plotByToken(char *token, char *charType, int value) {
 }
 
 /**
-* Send a plot to plotty of float type
+* Send a plot to plotly of float type
 */
-void plotByToken(char *token, char *charType, float value) {  
+void plotByToken(char *token, float value) {  
   if (!theStreamHasStarted) {
     return;
   }  
@@ -175,7 +175,7 @@ void plotByToken(char *token, char *charType, float value) {
   tempStr.toCharArray(floatBuf, 16);//map float to char array
   
   char buf[100];
-  sprintf(buf, "P|%s|%s|%s|", token, charType, floatBuf); // build up request
+  sprintf(buf, "P|%s|%s|%s|", token, "F", floatBuf); // build up request
   
   if (DEBUG_TO_SERIAL==1) {
     Serial.println(buf);
@@ -203,22 +203,20 @@ void sendPlotlyDataToWifiSlave() {
   //Send temp
     //  ..core
     getToken(TRACE_CORE_TEMP).toCharArray(traceToken, 11);//select token
-    plotByToken(traceToken, "F", getThermocoupleAvgCelsius1());//send token with our value
-    delay(120);
+    plotByToken(traceToken, getThermocoupleAvgCelsius1());//send token with our value
+    //delay(120);
     //  ..room
     getToken(TRACE_ROOM_TEMP).toCharArray(traceToken, 11);
-    plotByToken(traceToken, "F", getThermocoupleAvgCelsius2());
-    delay(120);    
+    plotByToken(traceToken, getThermocoupleAvgCelsius2());
+    //delay(120);    
     //Send power
     getToken(TRACE_POWER).toCharArray(traceToken, 11);
-    plotByToken(traceToken, "F", getPower());
-    delay(120);
+    plotByToken(traceToken, getPower());
+    //delay(120);
     //Send PSI
     getToken(TRACE_PRESSURE).toCharArray(traceToken, 11);
-    plotByToken(traceToken, "I", getPressurePsi());
+    plotByToken(traceToken, getPressurePsi());
    
-    // see: https://plot.ly/streaming/
-    //    and https://github.com/plotly/arduino-api
 }
 
 void setupWifiSlave() {

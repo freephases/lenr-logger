@@ -7,11 +7,10 @@
 *
 * Uses:
 *  Arduino Mega ATmega1280
-*  max6675 with thermocouple or more
-*  Uno runnning SerialToWifiRelay program and old style wifi card (rev1) - THE SLAVE
+*  max6675 with thermocouple x 2
+*  Uno runnning SerialToWifiRelay program and old style wifi card (rev1) - THE wifi SLAVE
 *  5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
-*  OpenEnergyMonitor SMD card using analog ports 0-1 only for I and V linked via the mega by the wonders of wires (not pinz)
-*  
+*  mini pro running OpenEnergyMonitor SMD card using analog ports 0-1 only - the power salve
 *  
 *  Copyright (c) 2015 free phases
 *  
@@ -35,36 +34,34 @@
 */
 
 /**
-* thermocouple amp lib
+* thermocouple driver/amp lib
 */
 #include "max6675.h"
-#include <EmonLib.h>
-//#include <LiquidCrystal.h>
-//also todo: SD card reader to get WiFi and Plotly passwords
+
+/**
+* OnOff is simple class to manage digital ports see: https://github.com/freephases/arduino-onoff-lib
+*/
 #include <OnOff.h>
-//#include <TimerOne.h> cannot use as mothods require a lot of work.
+
+
+//#include <TimerOne.h> //to do
 /**
 * Settings
 **/
 // send debug info to serial - 1 is on anything else is off
-#define DEBUG_TO_SERIAL 0
+#define DEBUG_TO_SERIAL 1
 //debug raw serial output of the slave if you add jumpers to rx and tx od slave to tx and rx of the mega
 #define DEBUG_SLAVE_SERIAL 0
 
 //use a slave device able to read CSV data or set to 0 to use python example format TODO
-#define PAD_CSV_SLAVE 1
-#define PLYTHON_SERIAL 2
-#define EXCEL 3
+#define PAD_CSV_SLAVE 1 // use wifi slave
+#define RAW_CSV 2 // send raw CSV data to serial 0, DEBUG_TO_SERIAL and DEBUG_SLAVE_SERIAL must be 0
+
 #define DATA_LOGGERING_MODE PAD_CSV_SLAVE
 
-//Plotly tokens index for each trace
-#define TRACE_CORE_TEMP   0
-#define TRACE_ROOM_TEMP   1
-#define TRACE_POWER       2
-#define TRACE_PRESSURE    3
-
+#define ROB_WS_MAX_STRING_DATA_LENGTH 150
 //how long do we want the interval between sending data to plotly to be
-const long sendDataInterval = 30000;//send data every 30 secs
+const unsigned long sendDataInterval = 15000;//send data every 30 secs
 
 // see other files in tap above for specific sensor settings and mnay other things
 
@@ -73,7 +70,6 @@ const long sendDataInterval = 30000;//send data every 30 secs
 */
 unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
 
-char traceToken[11]; //char array to hold a token for ploty
 
 OnOff connectionOkLight(30); // nice light so we know it's working
 
@@ -89,16 +85,40 @@ void printToLcdWithDelay(byte lineNum, char* message, int delayTime = 350) {
 }*/
 
 /**
+* Return a value with in a CSV string where index is the 
+*/
+String getValue(String data, char separator, int index)
+{
+  int found = 0;
+  int strIndex[] = {
+    0, -1        };
+  int maxIndex = data.length()-1;
+
+  for(int i=0; i<=maxIndex && found<=index; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+      found++;
+      strIndex[0] = strIndex[1]+1;
+      strIndex[1] = (i == maxIndex) ? i+1 : i;
+    }
+  }
+
+  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+/**
 * Send the traces to our plotly stream
 */
 void sendData() {
-  if (getThermocoupleAvgCelsius1() > -200.0000 && millis() - sendDataMillis >= sendDataInterval) {
+  if (canSendData && (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval)) {
     sendDataMillis = millis();
     connectionOkLight.off();
 
     if (DEBUG_TO_SERIAL == 1) {
       Serial.print("Reactor core temp: ");
       Serial.print(getThermocoupleAvgCelsius1());
+      Serial.println(" Celsius");
+      Serial.print("Room temp: ");
+      Serial.print(getThermocoupleAvgCelsius2());
       Serial.println(" Celsius");
       Serial.print("Reactor pressure: ");
       Serial.print(getPressurePsi());
@@ -108,24 +128,13 @@ void sendData() {
       Serial.println("W");
     }
     
-    //Send temp
-    //  ..core
-    getToken(TRACE_CORE_TEMP).toCharArray(traceToken, 11);//select token
-    plotByToken(traceToken, "F", getThermocoupleAvgCelsius1());//send token with our value
-    //  ..room
-    getToken(TRACE_ROOM_TEMP).toCharArray(traceToken, 11);
-    plotByToken(traceToken, "F", getThermocoupleAvgCelsius2());
+#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
+  sendPlotlyDataToWifiSlave();
+#endif
+#if DATA_LOGGERING_MODE == RAW_CSV
+  printRawCsv();
+#endif
         
-    //Send power
-    getToken(TRACE_POWER).toCharArray(traceToken, 11);
-    plotByToken(traceToken, "F", getPower());
-    
-    //Send PSI
-    getToken(TRACE_PRESSURE).toCharArray(traceToken, 11);
-    plotByToken(traceToken, "I", getPressurePsi());
-    
-    // see: https://plot.ly/streaming/
-    //    and https://github.com/plotly/arduino-api
   }
 }
 
@@ -136,7 +145,7 @@ void readSensors() {
   readThermocouple1();
   readThermocouple2();
   readPressure();
-  readPower();
+ // readPower();<<move to mini pro now sent via Serial1
   
   //todo add more sensor readings....
 
@@ -146,21 +155,19 @@ void readSensors() {
  
 }
 
+void manageSerial() {
+#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE  
+  processWifiSlaveSerial();
+#endif
+  processPowerSlaveSerial();
+}
+
 /**
 * Things to call when not sending data, called by other functions not just loop()
 */
-void doMainLoops() {
+void doMainLoops() {  
+  manageSerial();
   readSensors();
-  switch (DATA_LOGGERING_MODE) {
-    case PAD_CSV_SLAVE: processSlaveSerial();
-      break;
-    //case PLYTHON_SERIAL:
-    //case EXCEL:
-    //case TO_SDCARD_AS_CSV:
-    default:
-      Serial.println("ERORR: DATA_LOGGERING_MODE NOT COMPLETED YET");
-      break;
-  }
 }
 
 /**
@@ -174,20 +181,16 @@ void setup() {
   
   //Call our sensors setup funcs
   setupPressure();
-  setupPower();
+  powerSlaveSetup();
   
   //lcd.begin(16, 2);
   //printToLcdWithDelay(0, "Starting...  ");
   //printToLcdWithDelay(1, "     ...  ");
   
-  //Prepare slaves and masters as required
-  if (DATA_LOGGERING_MODE == PAD_CSV_SLAVE) {
-    Serial3.begin(9600);//slaves serial
-    Serial2.begin(9600);//salve feed back if you wire up 0 and 1 back to mega serial 2 ports
-    //printToLcdWithDelay(1, "Waiting for wifi");
-  } else {
-     //printToLcdWithDelay(1, "Not a complete mode - todo");
-  }
+#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE  
+    setupWifiSlave();
+#endif
+
   delay(50);
   sendDataMillis = millis();//set milli secs so we get first reading after set interval
   connectionOkLight.off();
@@ -202,4 +205,6 @@ void loop() {
   if (DEBUG_SLAVE_SERIAL == 1) {
     processDebugSlaveSerial();// for debug only
   }
+  
+ 
 }

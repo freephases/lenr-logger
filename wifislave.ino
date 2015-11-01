@@ -2,40 +2,19 @@
 * LENR logger slave interface, my wifi card, not portable very much (YET!)
 * Sends data via serial to uno with plotty uplader 
 */
-#include "pottysettings.h"
 
-#define ROB_WS_MAX_STRING_DATA_LENGTH 100
-int newlineCount = 0;
-boolean printWebResponse = false;
-int bufferLength = 0;
-
-boolean started = true;
+#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
+#include "plotlysettings.h"
 
 short pos = 0; // position in read buffer
 char buffer[ROB_WS_MAX_STRING_DATA_LENGTH+1];
 char inByte = 0;
-volatile boolean waitingForResponse = false;
-volatile boolean theStreamHasStarted = false;
+boolean waitingForResponse = false;
+boolean theStreamHasStarted = false;
 boolean haveConnected = false;
 boolean handShakeSucessful = false;
+char traceToken[11]; //char array to hold a token for ploty
 
-String getValue(String data, char separator, int index)
-{
-  int found = 0;
-  int strIndex[] = {
-    0, -1        };
-  int maxIndex = data.length()-1;
-
-  for(int i=0; i<=maxIndex && found<=index; i++){
-    if(data.charAt(i)==separator || i==maxIndex){
-      found++;
-      strIndex[0] = strIndex[1]+1;
-      strIndex[1] = (i == maxIndex) ? i+1 : i;
-    }
-  }
-
-  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
-}
 
 String getToken(int index)
 {
@@ -45,17 +24,18 @@ String getToken(int index)
 void processSalveResponse() 
 {
   char recordType = buffer[0];
-  waitingForResponse = false;  
+ 
   switch(recordType) {
   case 'S' : //error
   
      if (DEBUG_TO_SERIAL==1) { Serial.println("slave error"); } 
      //not a lot we can do without any more information about said error so forget about it. Easy!!!
     break;
-  case 'O' : //ok - cool, we are still cooking now...
+  case 'O' : //ok - 
      if (DEBUG_TO_SERIAL==1) { Serial.println("OK"); }
      theStreamHasStarted = true;
      connectionOkLight.on();
+      waitingForResponse = false;  
     break;
  
   }
@@ -63,7 +43,7 @@ void processSalveResponse()
 /**
  * Process data sent vy master
  */
-void processSlaveSerial()
+void processWifiSlaveSerial()
 {
   // send data only when you receive data:
   while (Serial3.available() > 0)
@@ -83,7 +63,10 @@ void processSlaveSerial()
       }
       Serial3.println("*");
       delay(300);
+      buffer[0] = 0; 
+      pos = 0;   
       startPlotting(overWriteChart);
+     // processSlaveSerial();
       continue;
     }
     if (!handShakeSucessful) {
@@ -112,11 +95,16 @@ void processSlaveSerial()
 */
 void waitForResponse()
 {
+ // waitingForResponse = false; 
+//  return;
   unsigned long waitStartMillis = millis();
   while(waitingForResponse) {
     doMainLoops();
-    if (millis()-waitStartMillis>3000) {      
-      waitingForResponse = false; //timeout after 3 secs ;) so we can continue as normal...
+    if (DEBUG_SLAVE_SERIAL == 1) {
+      processDebugSlaveSerial();// for debug only
+    }
+    if (millis()-waitStartMillis>10000) {      
+//      waitingForResponse = false; //timeout after 80 so secs ;) so we can continue as normal...
       break;
     }    
   }
@@ -143,6 +131,7 @@ void startPlotting(int overWrite) {
     Serial.println(buf);
     Serial.println("Sent start plotting command");
   }
+   waitForResponse();
 }
 
 /**
@@ -153,7 +142,7 @@ void plotByToken(char *token, char *charType, int value) {
     return;
   }  
     
-  waitForResponse();//wait for other requests to be dealt with
+ // waitForResponse();//wait for other requests to be dealt with
   
   char buf[100];
   sprintf(buf, "P|%s|%s|%d|", token, charType, value);// build up request
@@ -168,6 +157,7 @@ void plotByToken(char *token, char *charType, int value) {
   if (DEBUG_TO_SERIAL==1) {
     Serial.println("Plot sent");
   }
+   waitForResponse();
 }
 
 /**
@@ -178,7 +168,7 @@ void plotByToken(char *token, char *charType, float value) {
     return;
   }  
     
-  waitForResponse();//wait for other requests to be dealt with, get around with have a single core so a single process thread!!
+  //waitForResponse();//wait for other requests to be dealt with, get around with have a single core so a single process thread!!
   
   String tempStr = String(value);//map float to a string
   char floatBuf[16];
@@ -197,4 +187,43 @@ void plotByToken(char *token, char *charType, float value) {
   if (DEBUG_TO_SERIAL==1) {
     Serial.println("Plot sent");
   }
+  
+   waitForResponse();
 }
+
+boolean canSendData() {
+  return theStreamHasStarted;
+}
+
+boolean isWaitingForResponse() {
+  return waitingForResponse;
+}
+
+void sendPlotlyDataToWifiSlave() {
+  //Send temp
+    //  ..core
+    getToken(TRACE_CORE_TEMP).toCharArray(traceToken, 11);//select token
+    plotByToken(traceToken, "F", getThermocoupleAvgCelsius1());//send token with our value
+    delay(120);
+    //  ..room
+    getToken(TRACE_ROOM_TEMP).toCharArray(traceToken, 11);
+    plotByToken(traceToken, "F", getThermocoupleAvgCelsius2());
+    delay(120);    
+    //Send power
+    getToken(TRACE_POWER).toCharArray(traceToken, 11);
+    plotByToken(traceToken, "F", getPower());
+    delay(120);
+    //Send PSI
+    getToken(TRACE_PRESSURE).toCharArray(traceToken, 11);
+    plotByToken(traceToken, "I", getPressurePsi());
+   
+    // see: https://plot.ly/streaming/
+    //    and https://github.com/plotly/arduino-api
+}
+
+void setupWifiSlave() {
+  Serial3.begin(9600);//slaves serial
+    Serial2.begin(9600);//salve feed back if you wire up 0 and 1 back to mega serial 2 ports
+}
+
+#endif

@@ -22,22 +22,26 @@ float thermocoupleAvgCelsius1 = -200.000; // thermocoupleTotalReadingCelsius div
 MAX6675 thermocouple1(thermoCLK1, thermoCS1, thermoDO1);
 
 /**
-* Read reactor thermocouple Celsius value and 
+* Read reactor thermocouple Celsius value and
 * create avg every thermocoupleReadCount times
 */
-void readThermocouple1() {     
-  if (millis()-readThermocoupleMillis1>=readThermocoupleInterval1) {
-     readThermocoupleMillis1 = millis();
+void readThermocouple1() {
+  if (millis() - readThermocoupleMillis1 >= readThermocoupleInterval1) {
+    readThermocoupleMillis1 = millis();
     thermocoupleReadCount1++;
     thermocoupleTotalReadingCelsius1 += thermocouple1.readCelsius();
     //thermocoupleTotalReadingFahrenheit1 +=thermocouple1.readFahrenheit();//leave for now
-   
-    if (thermocoupleReadCount1==thermocoupleMaxRead1) {    
+
+    if (thermocoupleReadCount1 == thermocoupleMaxRead1) {
       //set thermocoupleAvgCelsius and reset totals and counters
-      thermocoupleAvgCelsius1 = thermocoupleTotalReadingCelsius1/thermocoupleMaxRead1;
+      thermocoupleAvgCelsius1 = thermocoupleTotalReadingCelsius1 / thermocoupleMaxRead1;
       thermocoupleTotalReadingCelsius1 = 0;
       //thermocoupleTotalReadingFahrenheit1 = 0;
       thermocoupleReadCount1 = 0;//reset to 0;
+      if (DEBUG_TO_SERIAL == 1) {
+        Serial.print("thermocouple1: ");
+        Serial.println(thermocoupleAvgCelsius1);
+      }
     }
   }
 }

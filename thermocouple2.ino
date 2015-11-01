@@ -1,6 +1,6 @@
 /**
 * LENR logger thermocouple 2 - room temp - related functions - should be same or very simular spec thermocouple to core thermocouple1
-* if we need more thermocouples will be best to use object in an array instead of this s....
+* if we need more thermocouples will be best to use object in an array 
 */
 //settings
 const int thermoDO2 = 33;//reanme as names do nt match my card DO is POO i think??? therefre i;m a rock
@@ -23,22 +23,26 @@ float thermocoupleAvgCelsius2 = -200.000; // thermocoupleTotalReadingCelsius div
 MAX6675 thermocouple2(thermoCLK2, thermoCS2, thermoDO2);
 
 /**
-* Read room temp thermocouple Celsius value and 
+* Read room temp thermocouple Celsius value and
 * create avg every thermocoupleReadCount times
 */
-void readThermocouple2() {     
-  if (millis()-readThermocoupleMillis2>=readThermocoupleInterval2) {
-     readThermocoupleMillis2 = millis();
+void readThermocouple2() {
+  if (millis() - readThermocoupleMillis2 >= readThermocoupleInterval2) {
+    readThermocoupleMillis2 = millis();
     thermocoupleReadCount2++;
     thermocoupleTotalReadingCelsius2 += thermocouple2.readCelsius();
     //thermocoupleTotalReadingFahrenheit2 +=thermocouple2.readFahrenheit();//leave for now
-   
-    if (thermocoupleReadCount2==thermocoupleMaxRead2) {    
+
+    if (thermocoupleReadCount2 == thermocoupleMaxRead2) {
       //set thermocoupleAvgCelsius and reset totals and counters
-      thermocoupleAvgCelsius2 = thermocoupleTotalReadingCelsius2/thermocoupleMaxRead2;
+      thermocoupleAvgCelsius2 = thermocoupleTotalReadingCelsius2 / thermocoupleMaxRead2;
       thermocoupleTotalReadingCelsius2 = 0;
       //thermocoupleTotalReadingFahrenheit2 = 0;
       thermocoupleReadCount2 = 0;//reset to 0;
+      if (DEBUG_TO_SERIAL == 1) {
+        Serial.print("thermocouple2: ");
+        Serial.println(thermocoupleAvgCelsius2);
+      }
     }
   }
 }

@@ -20,6 +20,7 @@ plotly-max-points=300
 plotly-filename=your_filename_here
 disable_sd_logging=no
 send_interval_sec=15
+disable_data_send=no
 
 */
 
@@ -150,6 +151,7 @@ void loadGlobalSettings() {
   getConfigSetting("plotly-tokens").toCharArray(plotlyTokens, 70);
   
   logToSDCard = !getConfigSettingAsBool("disable_sd_logging");
+  allowDataSend = !getConfigSettingAsBool("disable_data_send");
   
   unsigned long sI = getConfigSettingAsInt("send_interval_sec");
   if (sI<1) sI = defaultSendDataIntervalSecs;

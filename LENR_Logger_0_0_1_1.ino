@@ -67,7 +67,7 @@
 #define DATA_LOGGERING_MODE PAD_CSV_SLAVE
 
 /**
-* Led to signal we are working
+* Led to signal we are working, using digital pin 30 on Mega connected to 5v green LED
 */
 OnOff connectionOkLight(30);
 
@@ -75,12 +75,18 @@ OnOff connectionOkLight(30);
 * global vars for run time...
 */
 unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
+
 /**
 * Log data to 'DATALOG' file on SD card - can be disable via RUN file's disable_sd_logging setting
 * will just append data to end of file so you need to clean it up before running out of space
 */
 boolean logToSDCard = true; 
 
+/**
+* Send data to wifi slave or serial depending on DATA_LOGGERING_MODE, can be set in 'RUN' config fiel on SD card
+* allows device to log just to SD card if you so wish
+*/
+boolean allowDataSend = true; 
 
 /**
 * Data send interval
@@ -150,7 +156,7 @@ void sendData() {
     if (logToSDCard) {
       saveCsvData();
     }
-    if (canSendData()) {
+    if (canSendData() && allowDataSend) {
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
       connectionOkLight.off(); // light is turned on when streaming starts and get an OK from WifiSlave once plot is sent to plotly
       sendPlotlyDataToWifiSlave();

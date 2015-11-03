@@ -8,6 +8,7 @@ Version: 0.0.1.0
 
 Uses:
 - Arduino Mega ATmega1280
+- SD card with SPI interface
 - max6675 with thermocouple x 2
 - Uno with old style wifi card (rev1) - The wifi slave
   running https://github.com/freephases/wifi-plotly-slave

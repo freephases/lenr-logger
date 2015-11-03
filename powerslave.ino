@@ -7,29 +7,33 @@ char psBuffer[MAX_STRING_DATA_LENGTH + 1];
 char psInByte = 0;
 typedef struct {
   float power, Vrms, Irms;
-} PayloadTX;      // create structure - a neat way of packaging data for RF comms
+} PayloadTX;     
 PayloadTX emontx;
 
 
+/**
+* Set emontx struct
+*/
 void setPowerInfo() {
-  char buf[25];
+  char buf[15];
   float f;
 
-  getValue(psBuffer, '|', 1).toCharArray(buf, 24);
+  getValue(psBuffer, '|', 1).toCharArray(buf, 15);
   f = atof(buf);
   emontx.power = f;
 
-  getValue(psBuffer, '|', 2).toCharArray(buf, 24);
+  getValue(psBuffer, '|', 2).toCharArray(buf, 15);
   f = atof(buf);
   emontx.Vrms = f;
 
-  getValue(psBuffer, '|', 3).toCharArray(buf, 24);
+  getValue(psBuffer, '|', 3).toCharArray(buf, 15);
   f = atof(buf);
   emontx.Irms = f;
-
-
 }
 
+/**
+* Execute response
+*/
 void processPowerSlaveResponse()
 {
   char recordType = psBuffer[0];
@@ -42,7 +46,7 @@ void processPowerSlaveResponse()
   }
 }
 /**
- * Process data sent to master
+ * Process serial data sent to master from power slave
  */
 void processPowerSlaveSerial()
 {

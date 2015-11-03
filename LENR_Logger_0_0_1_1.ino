@@ -3,29 +3,30 @@
 * LENR logger
 *
 * Oct 2015
-* Version: 0.0.1.0
+* Version: 0.0.1.1
 *
 * Uses:
 *  - Arduino Mega ATmega1280
-*  - max6675 with thermocouple x 2
+*  _ SD card compatible with SD and SPI libs
+*  - max6675 with thermocouple x 2 (at least, can have up to 4)
 *  - Uno runnning with old style wifi card (rev1) - The wifi slave
 *    runing https://github.com/freephases/wifi-plotly-slave
 *  - 5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
 *  - Arduino Pro Mini with a OpenEnergyMonitor SMD card using analog ports 0-1 only - the power/emon slave
 *    running https://github.com/freephases/power-serial-slave.git
-*  
+*
 *  Copyright (c) 2015 free phases
-*  
+*
 *  Permission is hereby granted, free of charge, to any person obtaining a copy
 *  of this software and associated documentation files (the "Software"), to deal
 *  in the Software without restriction, including without limitation the rights
 *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 *  copies of the Software, and to permit persons to whom the Software is
 *  furnished to do so, subject to the following conditions:
-*  
+*
 *  The above copyright notice and this permission notice shall be included in
 *  all copies or substantial portions of the Software.
-*  
+*
 *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,6 +35,12 @@
 *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 *  THE SOFTWARE.
 */
+
+/**
+* SD card lib + SPI
+*/
+#include <SPI.h>
+#include <SD.h>
 
 /**
 * thermocouple driver/amp lib
@@ -47,91 +54,112 @@
 
 
 //#include <TimerOne.h> //to do
-/**
-* Settings
-**/
-// send debug info to serial - 1 is on anything else is off
-#define DEBUG_TO_SERIAL 0
-//debug raw serial output of the slave if you add jumpers to rx and tx of slave to tx and rx of the mega serial 2 ports
-#define DEBUG_SLAVE_SERIAL 0
 
 /**
-* Logging option flags:
+* Include main defines/settings for logger
 */
-#define PAD_CSV_SLAVE 1 // flay to use for wifi slave, see https://github.com/freephases/wifi-plotly-slave
-#define RAW_CSV 2 // flag for using raw CSV data to serial 0, DEBUG_TO_SERIAL and DEBUG_SLAVE_SERIAL must be set to 0
-#define NO_LOGGING 0 //just use debugging mode, be sure to set DEBUG_TO_SERIAL to 1
+#include "logger.h"
+
+
 /**
-* Logging option
+* Set complie time logging option - see logger.h logger option flags
 */
 #define DATA_LOGGERING_MODE PAD_CSV_SLAVE
 
 /**
-* Maxium length of data reviced from slaves for 1 record/line
+* Led to signal we are working
 */
-#define MAX_STRING_DATA_LENGTH 160
+OnOff connectionOkLight(30);
+
+/**
+* global vars for run time...
+*/
+unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
+/**
+* Log data to 'DATALOG' file on SD card - can be disable via RUN file's disable_sd_logging setting
+* will just append data to end of file so you need to clean it up before running out of space
+*/
+boolean logToSDCard = true; 
 
 
 /**
 * Data send interval
 * how long do we want the interval between sending data
 */
-const unsigned long sendDataInterval = 15000;//send data every XX secs
+unsigned long sendDataInterval = 15000;//send data every XX millisecs
 
 /**
-* Led to signal we are working
+* Plotly vars read from config/settings file 'RUN'
 */
-OnOff connectionOkLight(30); 
-
+char plotlyUserName[30], plotlyPassword[20], plotlyFilename[40], plotlyTokens[70];
 
 /**
-* global vars for run time...
+* char array to hold a token for ploty when sending plots
 */
-unsigned long sendDataMillis = 0; // last milli secs since sending data to whereever
+char traceToken[11];
 
+/**
+* Get a plotly token from our piped list in the config file, 0 being the first
+*/
+String getToken(int index)
+{
+  return getValue(plotlyTokens, '|', index);
+}
 
 
 #if DATA_LOGGERING_MODE == RAW_CSV
-  /**
-  * when in raw CSV mode always send data
-  */
-  boolean canSendData() {
-    return true;
-  }
+/**
+* when in raw CSV mode always send data to serial
+*/
+boolean canSendData() {
+  return true;
+}
+#endif
+
+#if DEBUG_TO_SERIAL == 1
+/**
+* Dump debug info
+*/
+void dumpDebug() {
+  //Dump debug info
+  Serial.print("Reactor core temp: ");
+  Serial.print(getThermocoupleAvgCelsius1());
+  Serial.println(" Celsius");
+  Serial.print("Room temp: ");
+  Serial.print(getThermocoupleAvgCelsius2());
+  Serial.println(" Celsius");
+  Serial.print("Reactor pressure: ");
+  Serial.print(getPressurePsi());
+  Serial.println(" PSI");
+  Serial.print("Power: ");
+  Serial.print(getPower());
+  Serial.println("W");
+}
 #endif
 
 /**
 * Send the data to slave or serial, depending on DATA_LOGGERING_MODE
 */
 void sendData() {
-  if (sendDataMillis==0 || millis() - sendDataMillis >= sendDataInterval) {
+  if (sendDataMillis == 0 || millis() - sendDataMillis >= sendDataInterval) {
     sendDataMillis = millis();
-    
+
 #if DEBUG_TO_SERIAL == 1
-      //Dump debug info
-      Serial.print("Reactor core temp: ");
-      Serial.print(getThermocoupleAvgCelsius1());
-      Serial.println(" Celsius");
-      Serial.print("Room temp: ");
-      Serial.print(getThermocoupleAvgCelsius2());
-      Serial.println(" Celsius");
-      Serial.print("Reactor pressure: ");
-      Serial.print(getPressurePsi());
-      Serial.println(" PSI");
-      Serial.print("Power: ");
-      Serial.print(getPower());
-      Serial.println("W");
+    dumpDebug();
 #endif
-      if (canSendData()) {   
+    if (logToSDCard) {
+      saveCsvData();
+    }
+    if (canSendData()) {
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
-          connectionOkLight.off(); // light is turned on when streaming starts and get an OK from WifiSlave once plot is sent to plotly
-          sendPlotlyDataToWifiSlave();
+      connectionOkLight.off(); // light is turned on when streaming starts and get an OK from WifiSlave once plot is sent to plotly
+      sendPlotlyDataToWifiSlave();
 #else if DATA_LOGGERING_MODE == RAW_CSV
-          connectionOkLight.on();
-          printRawCsv();
-          connectionOkLight.off();  
+      connectionOkLight.on();
+      printRawCsv();
+      connectionOkLight.off();
 #endif
-      }        
+    }
   }
 }
 
@@ -142,21 +170,21 @@ void readSensors() {
   readThermocouple1();
   readThermocouple2();
   readPressure();
- // readPower();<<move to mini pro now sent via Serial1
-  
+  // readPower();<<moved to mini pro now sent via Serial1
+
   //todo add more sensor readings....
 
- 
+
   // readThermopileArray
   // readGeigerCounter
- 
+
 }
 
 /**
 * Process incomming slave serial data
 */
 void manageSerial() {
-#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE  
+#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
   processWifiSlaveSerial();
 #endif
 
@@ -166,7 +194,7 @@ void manageSerial() {
 /**
 * Things to call when not sending data, called by other functions not just loop()
 */
-void doMainLoops() {  
+void doMainLoops() {
   manageSerial();
   readSensors();
 }
@@ -177,20 +205,23 @@ void doMainLoops() {
 void setup() {
   Serial.begin(9600); // main serial ports used for debugging or sending raw CSV over USB
   connectionOkLight.on(); //tell the world we are alive
-  if (DEBUG_TO_SERIAL==1) {
+  if (DEBUG_TO_SERIAL == 1) {
     Serial.println("LENR logger"); // send some info on who we are
     Serial.println("");
   }
-  
+
+  //call sd card setup first to load settings. see sdcard file
+  sdCardSetup();
+
+#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
+  setupWifiSlave();
+#endif
+
   //Call our sensors setup funcs
   setupPressure();
   powerSlaveSetup();
-  
-#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE  
-    setupWifiSlave();
-#endif
 
-  delay(50);
+  delay(150);
   sendDataMillis = millis();//set milli secs so we get first reading after set interval
   connectionOkLight.off();
 }
@@ -202,6 +233,6 @@ void loop() {
   doMainLoops();
   sendData();
 #if DEBUG_SLAVE_SERIAL == 1
-    processDebugSlaveSerial();// for debug only
+  processDebugSlaveSerial();// for debug only
 #endif
 }

@@ -12,12 +12,12 @@ password=MyPassword
 sensors_enabled=TC1|TC2|Power|Pressure|!
 plotly-username=username
 plotly-password=password
-;tokens piped delited list for each sensors_enabled in the same order as speicifed in sensors_enabled
+;tokens piped delimited list for each sensors_enabled in the same order as speicifed in sensors_enabled
 plotly-tokens=dddhfjfj4e|dddhfjfj43|dddhfjf34e|dddhfjfj42
 plotly-token-count=4
 plotly-overwrite=yes
 plotly-max-points=300
-plotly-filename=test2
+plotly-filename=your_filename_here
 disable_sd_logging=no
 send_interval_sec=15
 
@@ -29,10 +29,13 @@ send_interval_sec=15
 #define MAX_SETTINGS 14
 
 /**
-* Char array to hold each line fo the file, we ignore lines starting with ';'
+* Char array to hold each line of the config file, we ignore lines starting with ';' but not empty lines yet!!
 */
 char loggerSettings[MAX_SETTINGS][70]= {"", "", "", "", "", "", "", "", "", "", "", "", "",""};
 
+/**
+* Total number of settings loaded
+*/
 int settingsCount = 0;
 
 /**

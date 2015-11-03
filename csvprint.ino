@@ -1,4 +1,6 @@
 /**
+* LENR logger
+*
 * Prints out results to CSV strings and Serial 
 */
 
@@ -24,6 +26,7 @@ String getCsvStringHeaders()
    
    return ret;
 }
+
 
 /**
 * Get CSV string of all enabled sensor readings
@@ -56,6 +59,27 @@ String getCsvString()
    }
    
    return ret;
+}
+
+/**
+* Print headers in to file if writing a line for the first time since opening
+*/
+boolean sdCardFirstLineLogged = false;
+
+/**
+* Save all enabled sensors values to SD card CSV file DATALOG
+*/
+void saveCsvData()
+{
+  if (!sdCardFirstLineLogged) {
+    saveLineToDatalog(getCsvStringHeaders());
+ }
+ sdCardFirstLineLogged = true;
+ saveLineToDatalog(getCsvString()); 
+ 
+  if (DEBUG_TO_SERIAL == 1) {
+      Serial.println("csv data saved to datalog file");
+    }
 }
 
 

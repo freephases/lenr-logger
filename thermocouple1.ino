@@ -2,9 +2,9 @@
 * LENR logger thermocouple 1 - reactor core temp - related functions
 */
 //settings
-const int thermoDO1 = 29;//reanme as names do nt match my card DO is POO i think??? therefre i;m a rock
-const int thermoCS1 = 27;
-const int thermoCLK1 = 28;
+const int thermoDO1 = 37;//reanme as names do nt match my card DO is POO i think??? therefre i;m a rock
+const int thermoCS1 = 38;
+const int thermoCLK1 = 36;
 const int thermocoupleMaxRead1 = 10; // number of readings to take before creating avg value
 const long readThermocoupleInterval1 = 500;//read every 500 millisecs
 

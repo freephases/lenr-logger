@@ -4,6 +4,14 @@
 * setting are kept in RUN and data is logged to DATALOG files on SD card
 */
 
+/**
+ * SD card attached to SPI bus as follows:
+ ** MOSI - pin 11 - 51 on mega
+ ** MISO - pin 12 - 50 on mega
+ ** CLK - pin 13 - 52 on mega
+ ** CS - pin 4 - 53 on mega
+ https://www.arduino.cc/en/Reference/SPI
+*/
 
 // On the Ethernet Shield, CS is pin 4. Note that even if it's not
 // used as the CS pin, the hardware CS pin (10 on most Arduino boards,

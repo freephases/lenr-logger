@@ -39,7 +39,7 @@ void processPowerSlaveResponse()
   char recordType = psBuffer[0];
 
   switch (recordType) {
-    case 'R' : //error
+    case 'R' : //got a response record/data from the our power slave
       setPowerInfo();
       break;
 
@@ -52,7 +52,6 @@ void processPowerSlaveSerial()
 {
   while (Serial1.available() > 0)
   {
-    // read the incoming byte:
     psInByte = Serial1.read();
 
     // add to our read buffer

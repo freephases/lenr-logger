@@ -2,8 +2,8 @@
 /**
 * LENR logger
 *
-* Oct 2015
-* Version: 0.0.1.1
+* Nov 2015
+* Version: 0.0.1.3
 *
 * Uses:
 *  - Arduino Mega ATmega1280
@@ -139,7 +139,11 @@ void dumpDebug() {
   Serial.println(" PSI");
   Serial.print("Power: ");
   Serial.print(getPower());
-  Serial.println("W");
+  Serial.print(" W, ");
+  Serial.print(getVrms());
+  Serial.println(" Vrms, ");
+  Serial.print(getIrms());
+  Serial.println(" Irms, ");
 }
 #endif
 
@@ -190,11 +194,14 @@ void readSensors() {
 * Process incomming slave serial data
 */
 void manageSerial() {
+    processPowerSlaveSerial();
+    
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
   processWifiSlaveSerial();
 #endif
 
   processPowerSlaveSerial();
+
 }
 
 /**
@@ -209,27 +216,38 @@ void doMainLoops() {
 * Set up
 */
 void setup() {
+  
   Serial.begin(9600); // main serial ports used for debugging or sending raw CSV over USB
-  connectionOkLight.on(); //tell the world we are alive
+ 
+  connectionOkLight.on(); //tell the user we are alive
+
   if (DEBUG_TO_SERIAL == 1) {
     Serial.println("LENR logger"); // send some info on who we are
-    Serial.println("");
+    Serial.println("");//clear
   }
 
-  //call sd card setup first to load settings. see sdcard file
+  //call sd card setup first to load settings. see sdcard.ino file
   sdCardSetup();
 
-#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
-  setupWifiSlave();
-#endif
-
-  //Call our sensors setup funcs
+//Call our sensors setup funcs
   setupPressure();
   powerSlaveSetup();
+  
+  //delay(6000);
+  
+#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
+connectionOkLight.off(); //flash light once so we know we are connecting to slave
+  setupWifiSlave();
+connectionOkLight.on();
+#endif
 
-  delay(150);
   sendDataMillis = millis();//set milli secs so we get first reading after set interval
-  connectionOkLight.off();
+  connectionOkLight.off(); //set light off, will turn on if logging ok, flushing means error
+  
+#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
+ Serial3.println("******");//tell wifi slave we are here
+ Serial3.flush();
+#endif
 }
 
 /**

@@ -77,7 +77,7 @@ void processWifiSlaveSerial()
   {
     // read the incoming byte:
     inByte = Serial3.read();
-    //if (inByte=='\r') continue;
+    if (inByte=='\r') continue;
 
     if (!haveConnected && inByte == '*') {
       haveConnected = true;
@@ -130,7 +130,7 @@ void waitForResponse()
     if (DEBUG_SLAVE_SERIAL == 1) {
       processDebugSlaveSerial();// for debug only
     }
-    if (millis() - waitStartMillis > 10000) {
+    if (millis() - waitStartMillis > 900000) {
       //      waitingForResponse = false; //timeout after 80 so secs ;) so we can continue as normal...
       break;
     }
@@ -259,10 +259,9 @@ void sendPlotlyDataToWifiSlave() {
 void setupWifiSlave() {
   Serial3.begin(9600);//slaves serial
   Serial2.begin(9600);//feed back slaves main serial if you wire up 0 and 1 back to mega serial 2 ports
-  delay(500);
   getConfigSetting("SSID").toCharArray(wifiSSID, 30);
   getConfigSetting("password").toCharArray(wifiPassword, 20);
-  Serial3.println("**************");//tell wifi slave we are here
+    
 }
 
 #endif

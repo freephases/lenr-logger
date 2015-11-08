@@ -3,8 +3,8 @@ Arduino Based Logger
 
 
 LENR logger
-Oct 2015
-Version: 0.0.1.0
+Nov 2015
+Version: 0.0.1.2
 
 Uses:
 - Arduino Mega ATmega1280

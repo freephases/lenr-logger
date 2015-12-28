@@ -1,19 +1,19 @@
-
 /**
 * LENR logger
 *
-* Nov 2015
-* Version: 0.0.1.3
+* Dec 2015
+* Version: 0.0.1.5
 *
 * Uses:
 *  - Arduino Mega ATmega1280
 *  _ SD card compatible with SD and SPI libs
-*  - max6675 with thermocouple x 2 (at least, can have up to 4)
+*  - MAX31855 with thermocouple x 2 (at least, can have up to 4)
 *  - Uno runnning with old style wifi card (rev1) - The wifi slave
 *    runing https://github.com/freephases/wifi-plotly-slave
 *  - 5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
 *  - Arduino Pro Mini with a OpenEnergyMonitor SMD card using analog ports 0-1 only - the power/emon slave
 *    running https://github.com/freephases/power-serial-slave.git
+*  - SSR to control heater power supply (see powerheater tab)
 *
 *  Copyright (c) 2015 free phases
 *
@@ -41,11 +41,11 @@
 */
 #include <SPI.h>
 #include <SD.h>
-
+#include <SoftwareSerial.h>
 /**
 * thermocouple driver/amp lib
 */
-#include "max6675.h"
+#include <Adafruit_MAX31855.h>
 
 /**
 * OnOff is simple class to manage digital ports see: https://github.com/freephases/arduino-onoff-lib
@@ -90,7 +90,7 @@ boolean allowDataSend = true;
 
 /**
 * Data send interval
-* how long do we want the interval between sending data
+* how long do we want the interval between sending data, set via send_interval_sec in config file
 */
 unsigned long sendDataInterval = 15000;//send data every XX millisecs
 
@@ -103,6 +103,7 @@ char plotlyUserName[30], plotlyPassword[20], plotlyFilename[40], plotlyTokens[70
 * char array to hold a token for ploty when sending plots
 */
 char traceToken[11];
+
 
 /**
 * Get a plotly token from our piped list in the config file, 0 being the first
@@ -200,8 +201,7 @@ void manageSerial() {
   processWifiSlaveSerial();
 #endif
 
-  processPowerSlaveSerial();
-
+  processPowerSlaveSerial();  
 }
 
 /**
@@ -210,6 +210,7 @@ void manageSerial() {
 void doMainLoops() {
   manageSerial();
   readSensors();
+  powerheaterLoop();
 }
 
 /**
@@ -230,10 +231,12 @@ void setup() {
   sdCardSetup();
 
 //Call our sensors setup funcs
+  thermocouple2Setup();
   setupPressure();
   powerSlaveSetup();
+  powerheaterSetup();
   
-  //delay(6000);
+  delay(6000);
   
 #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
 connectionOkLight.off(); //flash light once so we know we are connecting to slave

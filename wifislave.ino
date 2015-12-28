@@ -120,21 +120,27 @@ void processWifiSlaveSerial()
 /**
 * Call main loops, repeated until we get a response from the slave or timeout
 */
-void waitForResponse()
+boolean waitForResponse(unsigned long defWaitTime=0)
 {
+  boolean timedOut = false;
   // waitingForResponse = false;
   //  return;
   unsigned long waitStartMillis = millis();
+  if (defWaitTime==0) defWaitTime = sendDataInterval-250;
+  if (defWaitTime<1000) defWaitTime = 1000;
   while (waitingForResponse) {
     doMainLoops();
     if (DEBUG_SLAVE_SERIAL == 1) {
       processDebugSlaveSerial();// for debug only
     }
-    if (millis() - waitStartMillis > 900000) {
-      //      waitingForResponse = false; //timeout after 80 so secs ;) so we can continue as normal...
+    if (millis() - waitStartMillis > defWaitTime) {
+      waitingForResponse = false; //timeout after sendDataInterval-250 so secs ;) so we can continue as normal...
+      timedOut = true;
       break;
     }
   }
+  
+  return timedOut;
 }
 
 /**
@@ -159,7 +165,9 @@ void startPlotting() {
     Serial.println(buf);
     Serial.println("Sent start plotting command");
   }
-  waitForResponse();
+  if (waitForResponse(90000)) {
+     startPlotting();
+  }
 }
 
 /**
@@ -225,21 +233,21 @@ void sendPlotlyDataToWifiSlave() {
   if (isSensorEnabled("TC1")) {
     getToken(tokenToUse).toCharArray(traceToken, 11);//select token
     plotByToken(traceToken, getThermocoupleAvgCelsius1());//send token with our value
-    delay(120);
+   // delay(120);
     tokenToUse++;
   }
   //  ..room
   if (isSensorEnabled("TC2")) {
     getToken(tokenToUse).toCharArray(traceToken, 11);
     plotByToken(traceToken, getThermocoupleAvgCelsius2());
-    delay(120);
+  //  delay(120);
     tokenToUse++;
   }
   //Send power
   if (isSensorEnabled("Power")) {
     getToken(tokenToUse).toCharArray(traceToken, 11);
     plotByToken(traceToken, getPower());
-    delay(120);
+  //  delay(120);
     tokenToUse++;
   }
 
@@ -262,6 +270,10 @@ void setupWifiSlave() {
   getConfigSetting("SSID").toCharArray(wifiSSID, 30);
   getConfigSetting("password").toCharArray(wifiPassword, 20);
     
+}
+
+boolean getTheStreamHasStarted() {
+  return theStreamHasStarted;
 }
 
 #endif

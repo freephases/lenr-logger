@@ -21,18 +21,21 @@ plotly-filename=your_filename_here
 disable_sd_logging=no
 send_interval_sec=15
 disable_data_send=no
-
+;new for power control
+power_on_temp=999.9
+power_off_temp=1000.5
+run_time_mins=120
 */
 
 /**
 * Max number of setting we can have in the config file
 */
-#define MAX_SETTINGS 14
+#define MAX_SETTINGS 17
 
 /**
 * Char array to hold each line of the config file, we ignore lines starting with ';' but not empty lines yet!!
 */
-char loggerSettings[MAX_SETTINGS][70]= {"", "", "", "", "", "", "", "", "", "", "", "", "",""};
+char loggerSettings[MAX_SETTINGS][70]= {"", "", "", "", "", "", "", "", "", "", "", "", "","","","",""};
 
 /**
 * Total number of settings loaded
@@ -119,13 +122,13 @@ String getConfigSetting(char *name) {
   return String("");
 }
 
-int getConfigSettingAsInt(char *name) {  
-  if (getConfigSetting(name).length()==0) return 0;
+int getConfigSettingAsInt(char *name, int defaultVal=0) {  
+  if (getConfigSetting(name).length()==0) return defaultVal;
   else return getConfigSetting(name).toInt();
 }
 
-float getConfigSettingAsFloat(char *name) {  
-  if (getConfigSetting(name).length()==0) return 0.000;
+float getConfigSettingAsFloat(char *name, int defaultVal=0.000) {  
+  if (getConfigSetting(name).length()==0) return defaultVal;
   else return getConfigSetting(name).toFloat();
 }
 

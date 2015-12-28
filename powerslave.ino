@@ -65,7 +65,6 @@ void processPowerSlaveSerial()
       psBuffer[0] = '\0';
       psPos = 0;
     }
-
   }
 }
 

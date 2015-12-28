@@ -2,11 +2,11 @@
 * LENR logger thermocouple 1 - reactor core temp - related functions
 */
 //settings
-const int thermoDO1 = 37;//reanme as names do nt match my card DO is POO i think??? therefre i;m a rock
-const int thermoCS1 = 38;
-const int thermoCLK1 = 36;
-const int thermocoupleMaxRead1 = 10; // number of readings to take before creating avg value
-const long readThermocoupleInterval1 = 500;//read every 500 millisecs
+const int thermoDO1 = 3;//reanme as names do nt match my card DO is POO i think??? therefre i;m a rock
+const int thermoCS1 = 4;
+const int thermoCLK1 = 5;
+//const int thermocoupleMaxRead1 = 10; // number of readings to take before creating avg value
+const long readThermocoupleInterval1 = 1000;//read every 500 millisecs
 
 
 //vars
@@ -19,7 +19,7 @@ float thermocoupleAvgCelsius1 = -200.000; // thermocoupleTotalReadingCelsius div
 /**
 * objects for lib classes
 */
-MAX6675 thermocouple1(thermoCLK1, thermoCS1, thermoDO1);
+Adafruit_MAX31855 thermocouple1(thermoCLK1, thermoCS1, thermoDO1);
 
 /**
 * Read reactor thermocouple Celsius value and
@@ -28,21 +28,14 @@ MAX6675 thermocouple1(thermoCLK1, thermoCS1, thermoDO1);
 void readThermocouple1() {
   if (millis() - readThermocoupleMillis1 >= readThermocoupleInterval1) {
     readThermocoupleMillis1 = millis();
-    thermocoupleReadCount1++;
-    thermocoupleTotalReadingCelsius1 += thermocouple1.readCelsius();
-    //thermocoupleTotalReadingFahrenheit1 +=thermocouple1.readFahrenheit();//leave for now
-
-    if (thermocoupleReadCount1 == thermocoupleMaxRead1) {
-      //set thermocoupleAvgCelsius and reset totals and counters
-      thermocoupleAvgCelsius1 = thermocoupleTotalReadingCelsius1 / thermocoupleMaxRead1;
-      thermocoupleTotalReadingCelsius1 = 0;
-      //thermocoupleTotalReadingFahrenheit1 = 0;
-      thermocoupleReadCount1 = 0;//reset to 0;
+   
+   thermocoupleAvgCelsius1 = thermocouple1.readCelsius();
+   
       if (DEBUG_TO_SERIAL == 1) {
         Serial.print("thermocouple1: ");
         Serial.println(thermocoupleAvgCelsius1);
       }
-    }
+    
   }
 }
 

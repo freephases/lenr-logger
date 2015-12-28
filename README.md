@@ -4,7 +4,7 @@ Arduino Based Logger
 
 LENR logger
 Nov 2015
-Version: 0.0.1.3
+Version: 0.0.1.5
 
 Uses:
 - Arduino Mega ATmega1280
@@ -15,3 +15,4 @@ Uses:
 - 5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
 - Arduino Pro Mini running OpenEnergyMonitor SMD card using analog ports 0-1 only - the power slave
   running https://github.com/freephases/power-serial-slave.git
+- heater power control with SSR

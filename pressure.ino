@@ -24,7 +24,7 @@ void readPressure()
     readPressureMillis = millis();
     pressureRawV = analogRead(pressurePort);
     pressurePsi = map(pressureRawV, 102, 921, -14, 30);
-    if (DEBUG_TO_SERIAL == 1) {
+    if (debugToSerial) {
       Serial.print("Pressure raw: ");
       Serial.print(pressureRawV);
       Serial.print(", mapped PSI: ");

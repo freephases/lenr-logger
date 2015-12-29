@@ -77,13 +77,10 @@ void saveCsvData()
  sdCardFirstLineLogged = true;
  saveLineToDatalog(getCsvString()); 
  
-  if (DEBUG_TO_SERIAL == 1) {
+  if (debugToSerial) {
       Serial.println("csv data saved to datalog file");
     }
 }
-
-
-#if DATA_LOGGERING_MODE == RAW_CSV
 
 /**
 * Print result to serial 0  for interfacing with a program on a PC over USB
@@ -92,4 +89,4 @@ void printRawCsv() {
   Serial.println(getCsvString());
 }
 
-#endif
+

@@ -25,6 +25,7 @@ disable_data_send=no
 power_on_temp=999.9
 power_off_temp=1000.5
 run_time_mins=120
+debug_to_serial=no
 */
 
 /**
@@ -33,7 +34,7 @@ run_time_mins=120
 #define MAX_SETTINGS 17
 
 /**
-* Char array to hold each line of the config file, we ignore lines starting with ';' but not empty lines yet!!
+* Char array to hold each line of the config file, we ignore lines starting with ';' 
 */
 char loggerSettings[MAX_SETTINGS][70]= {"", "", "", "", "", "", "", "", "", "", "", "", "","","","",""};
 
@@ -50,7 +51,7 @@ void loadConfig()
   // re-open the file for reading:
   File myFile = SD.open("run.txt");//file must not have txt ext on device - not sure why
   if (myFile) {
-    if (DEBUG_TO_SERIAL == 1) {
+    if (debugToSerial) {
       Serial.println("opened file to read run.txt:");
     }
     
@@ -155,6 +156,7 @@ void loadGlobalSettings() {
   
   logToSDCard = !getConfigSettingAsBool("disable_sd_logging");
   allowDataSend = !getConfigSettingAsBool("disable_data_send");
+  debugToSerial = getConfigSettingAsBool("debug_to_serial");
   
   unsigned long sI = getConfigSettingAsInt("send_interval_sec");
   if (sI<1) sI = defaultSendDataIntervalSecs;

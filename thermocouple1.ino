@@ -2,7 +2,7 @@
 * LENR logger thermocouple 1 - reactor core temp - related functions
 */
 //settings
-const int thermoDO1 = 3;//reanme as names do nt match my card DO is POO i think??? therefre i;m a rock
+const int thermoDO1 = 3;
 const int thermoCS1 = 4;
 const int thermoCLK1 = 5;
 //const int thermocoupleMaxRead1 = 10; // number of readings to take before creating avg value
@@ -31,7 +31,7 @@ void readThermocouple1() {
    
    thermocoupleAvgCelsius1 = thermocouple1.readCelsius();
    
-      if (DEBUG_TO_SERIAL == 1) {
+      if (debugToSerial) {
         Serial.print("thermocouple1: ");
         Serial.println(thermocoupleAvgCelsius1);
       }

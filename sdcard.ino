@@ -24,7 +24,7 @@ const int chipSelect = 53;
 void sdCardSetup()
 {
  
-  if (DEBUG_TO_SERIAL == 1) {
+  if (debugToSerial) {
     Serial.print("Initializing SD card...");
   }
   // make sure that the default chip select pin is set to
@@ -40,7 +40,7 @@ void sdCardSetup()
       delay(1000);
     }
   }
-//  if (DEBUG_TO_SERIAL == 1) {
+//  if (debugToSerial) {
 //    Serial.println("card initialized.");
 //  }
   

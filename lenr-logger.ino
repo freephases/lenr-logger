@@ -60,12 +60,6 @@
 */
 #include "logger.h"
 
-
-/**
-* Set complie time logging option - see logger.h logger option flags
-*/
-#define DATA_LOGGERING_MODE PAD_CSV_SLAVE
-
 /**
 * Led to signal we are working, using digital pin 30 on Mega connected to 5v green LED
 */
@@ -80,13 +74,18 @@ unsigned long sendDataMillis = 0; // last milli secs since sending data to where
 * Log data to 'DATALOG' file on SD card - can be disable via RUN file's disable_sd_logging setting
 * will just append data to end of file so you need to clean it up before running out of space
 */
-boolean logToSDCard = true; 
+boolean logToSDCard = true;
 
 /**
-* Send data to wifi slave or serial depending on DATA_LOGGERING_MODE, can be set in 'RUN' config fiel on SD card
+* Send data to wifi slave, can be set in 'RUN' config file on SD card
 * allows device to log just to SD card if you so wish
 */
-boolean allowDataSend = true; 
+boolean allowDataSend = true;
+
+/**
+* Send debug messages to serial 0 not good if using USB connection to PC
+*/
+boolean debugToSerial = false;
 
 /**
 * Data send interval
@@ -114,16 +113,7 @@ String getToken(int index)
 }
 
 
-#if DATA_LOGGERING_MODE == RAW_CSV
-/**
-* when in raw CSV mode always send data to serial
-*/
-boolean canSendData() {
-  return true;
-}
-#endif
 
-#if DEBUG_TO_SERIAL == 1
 /**
 * Dump debug info
 */
@@ -146,7 +136,7 @@ void dumpDebug() {
   Serial.print(getIrms());
   Serial.println(" Irms, ");
 }
-#endif
+
 
 /**
 * Send the data to slave or serial, depending on DATA_LOGGERING_MODE
@@ -155,21 +145,21 @@ void sendData() {
   if (sendDataMillis == 0 || millis() - sendDataMillis >= sendDataInterval) {
     sendDataMillis = millis();
 
-#if DEBUG_TO_SERIAL == 1
+  if (debugToSerial) {
     dumpDebug();
-#endif
+  }
     if (logToSDCard) {
       saveCsvData();
     }
+
     if (canSendData() && allowDataSend) {
-#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
       connectionOkLight.off(); // light is turned on when streaming starts and get an OK from WifiSlave once plot is sent to plotly
       sendPlotlyDataToWifiSlave();
-#else if DATA_LOGGERING_MODE == RAW_CSV
+      printRawCsv();
+    } else if (!allowDataSend) {
       connectionOkLight.on();
       printRawCsv();
       connectionOkLight.off();
-#endif
     }
   }
 }
@@ -195,13 +185,13 @@ void readSensors() {
 * Process incomming slave serial data
 */
 void manageSerial() {
-    processPowerSlaveSerial();
-    
-#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
-  processWifiSlaveSerial();
-#endif
+  processPowerSlaveSerial();
 
-  processPowerSlaveSerial();  
+  if (allowDataSend) {
+    processWifiSlaveSerial();
+  }
+
+  processPowerSlaveSerial();
 }
 
 /**
@@ -217,12 +207,12 @@ void doMainLoops() {
 * Set up
 */
 void setup() {
-  
+
   Serial.begin(9600); // main serial ports used for debugging or sending raw CSV over USB
- 
+
   connectionOkLight.on(); //tell the user we are alive
 
-  if (DEBUG_TO_SERIAL == 1) {
+  if (debugToSerial) {
     Serial.println("LENR logger"); // send some info on who we are
     Serial.println("");//clear
   }
@@ -230,27 +220,25 @@ void setup() {
   //call sd card setup first to load settings. see sdcard.ino file
   sdCardSetup();
 
-//Call our sensors setup funcs
+  //Call our sensors setup funcs
   thermocouple2Setup();
   setupPressure();
   powerSlaveSetup();
   powerheaterSetup();
-  
-  delay(6000);
-  
-#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
-connectionOkLight.off(); //flash light once so we know we are connecting to slave
-  setupWifiSlave();
-connectionOkLight.on();
-#endif
 
+  delay(6000);
+
+  if (allowDataSend) {
+    connectionOkLight.off(); //flash light once so we know we are connecting to slave
+    setupWifiSlave();
+    connectionOkLight.on();
+  }
   sendDataMillis = millis();//set milli secs so we get first reading after set interval
   connectionOkLight.off(); //set light off, will turn on if logging ok, flushing means error
-  
-#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
- Serial3.println("******");//tell wifi slave we are here
- Serial3.flush();
-#endif
+  if (allowDataSend) {
+    Serial3.println("******");//tell wifi slave we are here
+    Serial3.flush();
+  }
 }
 
 /**

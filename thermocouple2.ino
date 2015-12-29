@@ -1,9 +1,9 @@
 /**
-* LENR logger thermocouple 2 - room temp - related functions - should be same or very simular spec thermocouple to core thermocouple1
-* if we need more thermocouples will be best to use object in an array 
+* LENR logger thermocouple 2 - room temp - related functions 
+* gets temp via serial from mini pro 
 */
 //settings
-const int thermoDO2 = 41;//reanme as names do nt match my card DO is POO i think??? therefre i;m a rock
+const int thermoDO2 = 41;
 const int thermoCS2 = 40;
 const int thermoCLK2 = 39;
 //const int thermocoupleMaxRead2 = 10; // number of readings to take before creating avg value
@@ -44,7 +44,7 @@ void setThermocouple2Info() {
   f = atof(buf);
   thermocoupleAvgCelsius2 = f;
   
-  if (DEBUG_TO_SERIAL == 1) {
+  if (debugToSerial) {
         Serial.print("thermocouple2: ");
         Serial.println(thermocoupleAvgCelsius2);
       }

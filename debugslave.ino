@@ -21,11 +21,9 @@ void relaySerial2ToSerial()
  */
 void processDebugSlaveSerial()
 {
-    switch (DATA_LOGGERING_MODE) {
-      case PAD_CSV_SLAVE: 
-          relaySerial2ToSerial();
-      break;
-      // ..
+    if (allowDataSend) {
+      relaySerial2ToSerial();
+      
     }
 }
 

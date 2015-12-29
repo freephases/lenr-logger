@@ -3,8 +3,6 @@
 * Sends data via serial to uno with plotty uplader
 */
 
-#if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
-
 short pos = 0; // position in read buffer
 char wifiBuffer[MAX_STRING_DATA_LENGTH + 1];
 char inByte = 0;
@@ -40,7 +38,7 @@ void processSalveResponse()
 
   switch (recordType) {
     case 'E' :  //ERROR WITH REQUEST
-      if (DEBUG_TO_SERIAL == 1) {
+      if (debugToSerial) {
         Serial.print("slave error: ");
         Serial.println(getValue(wifiBuffer, '|', 1));
       }
@@ -48,7 +46,7 @@ void processSalveResponse()
       break;
       
     case 'O' : // REQUEST OK
-      if (DEBUG_TO_SERIAL == 1) {
+      if (debugToSerial) {
         Serial.println("OK");
       }
       waitingForResponse = false;
@@ -87,7 +85,7 @@ void processWifiSlaveSerial()
     if (!handShakeSucessful && haveConnected && inByte == '\n') {
       handShakeSucessful = true;
 
-      if (DEBUG_TO_SERIAL == 1) {
+      if (debugToSerial) {
         Serial.println("Connected to slave");
       }
     
@@ -161,7 +159,7 @@ void startPlotting() {
 
   Serial3.println(buf);//send request
   waitingForResponse = true; //note we are waiting for a response before we do another request
-  if (DEBUG_TO_SERIAL == 1) {
+  if (debugToSerial) {
     Serial.println(buf);
     Serial.println("Sent start plotting command");
   }
@@ -184,7 +182,7 @@ void plotByToken(char *token, int value) {
   v.toCharArray(intStr, 15);
   sprintf(buf, "P|%s|%s|%s|!", token, "I", intStr);// build up request
 
-  if (DEBUG_TO_SERIAL == 1) {
+  if (debugToSerial) {
     Serial.println(buf);
   }
 
@@ -276,4 +274,4 @@ boolean getTheStreamHasStarted() {
   return theStreamHasStarted;
 }
 
-#endif
+

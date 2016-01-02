@@ -4,7 +4,7 @@
 /**
 * debug raw serial output of the slave if you add jumpers to rx and tx of slave to tx and rx of the mega serial 2 ports
 */
-#define DEBUG_SLAVE_SERIAL 0
+#define DEBUG_SLAVE_SERIAL 1
 
 /**
 * Logging option flags:

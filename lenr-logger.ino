@@ -264,7 +264,7 @@ void setup() {
   } else {
     lcdSlaveMessage('M', "complete  ");
     delay(33);
-    lcdSlaveMessage('m', "oooooooooooooooo");
+    lcdSlaveMessage('m', "................");
     delay(1500);
     lcdSlaveMessage('C', "ok");
   }

@@ -34,10 +34,11 @@ void sdCardSetup()
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
     Serial.println("SD Card failed, or not present");
+    lcdSlaveMessage('m', "check SD card **");
     // don't do anything more:
     while(true) {      
       connectionOkLight.toggle();
-      delay(1000);
+      delay(1512);
     }
   }
 //  if (debugToSerial) {

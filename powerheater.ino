@@ -84,16 +84,16 @@ void startRun()
 {
   if (!heaterPowerControl.getIsOn()) {
     heaterTimedOut = false;
-    if(powerHeaterAutoMode && allowDataSend && getTheStreamHasStarted()) {
-          
+    if(powerHeaterAutoMode) {
+            if (allowDataSend && !getTheStreamHasStarted()) return;
               heaterOn();
               experimentJustStarted = false;
               lcdSlaveMessage('R', "ok");
             
-    } else if (!powerHeaterAutoMode) {
+    } else { //!allowDataSend) {
       //manual mode
       heaterOn();
-      heaterTimedOut = true;//no timmer 
+     heaterTimedOut = true;//no timmer 
       lcdSlaveMessage('R', "ok");
     }
   }
@@ -103,8 +103,7 @@ void startRun()
 void stopRun()
 {
   if (heaterPowerControl.getIsOn()) {
-    heaterOff();
-    
+    heaterOff();    
     heaterTimedOut = true;
     runTimeMillis = 0;
     experimentJustStarted = true;

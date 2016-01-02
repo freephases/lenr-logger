@@ -1,7 +1,7 @@
 /**
 * LENR logger slave debug interface
 */
-#if DEBUG_SLAVE_SERIAL == 1
+#if DEBUG_SLAVE_SERIAL == 2
 SoftwareSerial debugWifiSlave(12,34);
 
 char slaveInByte = 0;//to hold in coming byte
@@ -39,5 +39,8 @@ void debugSetup()
 {
 }
 
+void processDebugSlaveSerial()
+{
+}
 #endif
 

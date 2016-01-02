@@ -87,6 +87,7 @@ void checkWifiSerialIsUp()
     delay(4000);
     lcdSlaveMessage('C', "ok");    
     allowDataSend = false;
+   // setPowerHeaterAutoMode(false);
     wifiWakeUpMillis = 0;
   }
 }

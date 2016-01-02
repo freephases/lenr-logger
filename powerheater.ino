@@ -14,6 +14,7 @@ unsigned long maxRunTimeAllowedMillis = 0;
 unsigned long runTimeMillis = 0;
 const unsigned long intervalBeforePower = 60000;
 unsigned long dataStreamStartedMillis = 0;
+boolean powerHeaterAutoMode = true;
 
 void heaterOn()
 {
@@ -34,7 +35,7 @@ void powerheaterSetup()
   if (getConfigSettingAsInt("run_time_mins", 0) == 0) {
     maxRunTimeAllowedMillis = 0;//
   } else {
-    maxRunTimeAllowedMillis = (unsigned long) 60 * 1000 * getConfigSettingAsInt("run_time_mins");
+    maxRunTimeAllowedMillis = (unsigned long) 60000 * getConfigSettingAsInt("run_time_mins");
   }
   powerheaterMillis = millis();
 }
@@ -44,8 +45,7 @@ void powerheaterSetup()
 void powerheaterLoop()
 {
 
-
-  if (!heaterTimedOut && millis() - powerheaterMillis >= powerheaterCheckInterval) {
+  if (powerHeaterAutoMode && millis() - powerheaterMillis >= powerheaterCheckInterval) {
     powerheaterMillis = millis();
     
     if (runTimeMillis != 0 && millis() - runTimeMillis >= maxRunTimeAllowedMillis)  {
@@ -71,33 +71,81 @@ void powerheaterLoop()
       }
 
     } else {
-
-      //heater is currently off
-      if (experimentJustStarted) {
-        #if DATA_LOGGERING_MODE == PAD_CSV_SLAVE
-          if (dataStreamStartedMillis==0) { 
-            if (getTheStreamHasStarted()) {
-              dataStreamStartedMillis = millis();
-            }
-          } else {
-            if (millis()-dataStreamStartedMillis>intervalBeforePower) {
-              heaterOn();
-              experimentJustStarted = false;
-            }
-          }         
-        #else
-          if ( millis() > intervalBeforePower) { //auto turn on after intervalBeforePower millis
-            experimentJustStarted = false;
-            heaterOn();
-          }
-        #endif     
-        
-      }
-      else if (getThermocoupleAvgCelsius1() <= powerOnTemp) {        
+      // heater off...    
+      if (!experimentJustStarted && getThermocoupleAvgCelsius1() <= powerOnTemp) {        
           heaterOn();        
       }
-
     }
   }
 
+}
+
+void startRun()
+{
+  if (!heaterPowerControl.getIsOn()) {
+    heaterTimedOut = false;
+    if(powerHeaterAutoMode && allowDataSend && getTheStreamHasStarted()) {
+          
+              heaterOn();
+              experimentJustStarted = false;
+              lcdSlaveMessage('R', "ok");
+            
+    } else if (!powerHeaterAutoMode) {
+      //manual mode
+      heaterOn();
+      heaterTimedOut = true;//no timmer 
+      lcdSlaveMessage('R', "ok");
+    }
+  }
+}
+
+
+void stopRun()
+{
+  if (heaterPowerControl.getIsOn()) {
+    heaterOff();
+    
+    heaterTimedOut = true;
+    runTimeMillis = 0;
+    experimentJustStarted = true;
+    lcdSlaveMessage('S', "ok");
+  }
+}
+
+void setPowerHeaterAutoMode(boolean autoMode)
+{
+  powerHeaterAutoMode = autoMode;
+  if (autoMode) 
+    lcdSlaveMessage('A', "ok"); // auto set ok
+ else
+    lcdSlaveMessage('a', "ok"); // manual set ok
+}
+
+boolean getPowerHeaterAutoMode()
+{
+  return powerHeaterAutoMode;
+}
+
+boolean hasRunStarted()
+{
+  return (runTimeMillis!=0);
+}
+
+int getMinsToEndOfRun()
+{
+  
+  if (hasRunStarted()) {
+    return (int) (maxRunTimeAllowedMillis/60000) - (millis()-runTimeMillis/60000);
+  } else {
+     return (int) (maxRunTimeAllowedMillis/60000);
+  }
+}
+
+int getTotalRunMins()
+{
+  if (hasRunStarted()) {
+   return (int) (millis()-runTimeMillis)/60000;
+  } else {
+    return 0;
+  }
 }

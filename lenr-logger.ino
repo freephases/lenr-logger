@@ -1,21 +1,23 @@
 /**
 * LENR logger
 *
-* Dec 2015
-* Version: 0.0.1.5
+* Jan 2016
+* Version: 0.0.1.6
 *
 * Uses:
 *  - Arduino Mega ATmega1280
 *  _ SD card compatible with SD and SPI libs
 *  - MAX31855 with thermocouple x 2 (at least, can have up to 4)
 *  - Uno runnning with old style wifi card (rev1) - The wifi slave
-*    runing https://github.com/freephases/wifi-plotly-slave
+*    runs https://github.com/freephases/wifi-plotly-slave
 *  - 5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
 *  - Arduino Pro Mini with a OpenEnergyMonitor SMD card using analog ports 0-1 only - the power/emon slave
-*    running https://github.com/freephases/power-serial-slave.git
+*    runs https://github.com/freephases/power-serial-slave.git
 *  - SSR to control heater power supply (see powerheater tab)
+*  - Arduino Pro Mini with Lcd and keypad to display basic values and control PID/SSR run and stop
+*    runs https://github.com/freephases/lenr-logger-lcd.git
 *
-*  Copyright (c) 2015 free phases
+*  Copyright (c) 2015-2016 free phases research
 *
 *  Permission is hereby granted, free of charge, to any person obtaining a copy
 *  of this software and associated documentation files (the "Software"), to deal
@@ -85,7 +87,7 @@ boolean allowDataSend = true;
 /**
 * Send debug messages to serial 0 not good if using USB connection to PC
 */
-boolean debugToSerial = false;
+boolean debugToSerial = (DEBUG_SLAVE_SERIAL==1);
 
 /**
 * Data send interval
@@ -102,6 +104,8 @@ char plotlyUserName[30], plotlyPassword[20], plotlyFilename[40], plotlyTokens[70
 * char array to hold a token for ploty when sending plots
 */
 char traceToken[11];
+
+unsigned long wifiWakeUpMillis = 0;
 
 
 /**
@@ -139,7 +143,7 @@ void dumpDebug() {
 
 
 /**
-* Send the data to slave or serial, depending on DATA_LOGGERING_MODE
+* Send the data to slave or serial, depending on config settings
 */
 void sendData() {
   if (sendDataMillis == 0 || millis() - sendDataMillis >= sendDataInterval) {
@@ -162,6 +166,7 @@ void sendData() {
       connectionOkLight.off();
     }
   }
+  lcdSlaveSendData();//update LCD display
 }
 
 /**
@@ -191,7 +196,8 @@ void manageSerial() {
     processWifiSlaveSerial();
   }
 
-  processPowerSlaveSerial();
+  //processPowerSlaveSerial();
+  processLcdSlaveSerial();
 }
 
 /**
@@ -209,35 +215,58 @@ void doMainLoops() {
 void setup() {
 
   Serial.begin(9600); // main serial ports used for debugging or sending raw CSV over USB
-
+  debugSetup();
+  
+  
   connectionOkLight.on(); //tell the user we are alive
 
   if (debugToSerial) {
+    
     Serial.println("LENR logger"); // send some info on who we are
     Serial.println("");//clear
   }
-
+  
+  //set up lcd slave
+  setupLcdSlave();
+  delay(100);
+  lcdSlaveMessage('M', "system  ");
+  delay(300);
   //call sd card setup first to load settings. see sdcard.ino file
-  sdCardSetup();
-
-  //Call our sensors setup funcs
+  lcdSlaveMessage('m', " SD card........");
+  sdCardSetup();  
+  delay(700);
+  //Call our sensors setup funcs  
+  lcdSlaveMessage('m', " thermocouples..");
   thermocouple2Setup();
-  setupPressure();
+  delay(1000);
+  lcdSlaveMessage('m', " pressure.......");
+  setupPressure();   
+   delay(1000);
+  lcdSlaveMessage('m', " power..........");
   powerSlaveSetup();
+  
   powerheaterSetup();
-
-  delay(6000);
+ 
+  delay(3000);
 
   if (allowDataSend) {
-    connectionOkLight.off(); //flash light once so we know we are connecting to slave
+    lcdSlaveMessage('M', "wifi    ");    
+    lcdSlaveMessage('m', "plotly stream...");
+    delay(20);
     setupWifiSlave();
-    connectionOkLight.on();
   }
   sendDataMillis = millis();//set milli secs so we get first reading after set interval
   connectionOkLight.off(); //set light off, will turn on if logging ok, flushing means error
   if (allowDataSend) {
+    wifiWakeUpMillis = millis();
     Serial3.println("******");//tell wifi slave we are here
     Serial3.flush();
+  } else {
+    lcdSlaveMessage('M', "complete  ");
+    delay(33);
+    lcdSlaveMessage('m', "oooooooooooooooo");
+    delay(1500);
+    lcdSlaveMessage('C', "ok");
   }
 }
 
@@ -246,7 +275,7 @@ void setup() {
 */
 void loop() {
   doMainLoops();
-  sendData();
+  sendData();  
 #if DEBUG_SLAVE_SERIAL == 1
   processDebugSlaveSerial();// for debug only
 #endif

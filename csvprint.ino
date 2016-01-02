@@ -31,31 +31,38 @@ String getCsvStringHeaders()
 /**
 * Get CSV string of all enabled sensor readings
 */
-String getCsvString()
+String getCsvString(char delimiter = ',', boolean addMillis = true)
 {
-   String ret = String(millis());
+  String ret = String("");
+  if (addMillis) {
+    ret = String(millis());        
+  } 
+  
     char s_[15];
-    
    if (isSensorEnabled("TC1")) {
      dtostrf(getThermocoupleAvgCelsius1(),2,3,s_);
      String tmp = String(s_);
-     ret = ret + ','+tmp;
+     if (ret.length()>0) ret = ret + delimiter;
+     ret = ret + tmp;
      
    }
    if (isSensorEnabled("TC2")) {     
      dtostrf(getThermocoupleAvgCelsius2(),2,3,s_);
      String tmp = String(s_);
-     ret = ret +','+tmp;
+    if (ret.length()>0) ret = ret + delimiter;
+     ret = ret + tmp;
    }
    if (isSensorEnabled("Power")) {
     
      dtostrf(getPower(),2,3,s_);
      String tmp = String(s_);
-     ret = ret +','+tmp;
+    if (ret.length()>0) ret = ret + delimiter;
+     ret = ret + tmp;
    }
    if (isSensorEnabled("Pressure")) {
      String tmp = String(getPressurePsi());
-     ret = ret +','+tmp;
+     if (ret.length()>0) ret = ret + delimiter;
+     ret = ret + tmp;
    }
    
    return ret;

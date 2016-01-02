@@ -2,16 +2,18 @@
 * LENR logger slave debug interface
 */
 #if DEBUG_SLAVE_SERIAL == 1
+SoftwareSerial debugWifiSlave(12,34);
 
 char slaveInByte = 0;//to hold in coming byte
 
 void relaySerial2ToSerial()
 {
   // send data only when you receive data:
-    while (Serial2.available() > 0)
+      debugWifiSlave.listen();
+    while (debugWifiSlave.available() > 0)
     {
       // read the incoming byte from slave and dump to our main serial
-      slaveInByte = Serial2.read();      
+      slaveInByte = debugWifiSlave.read();      
       Serial.print(slaveInByte); //dump stright to serial 0 
     
     }
@@ -25,6 +27,16 @@ void processDebugSlaveSerial()
       relaySerial2ToSerial();
       
     }
+}
+
+void debugSetup()
+{
+  debugWifiSlave.begin(9600);
+}
+#else
+
+void debugSetup()
+{
 }
 
 #endif

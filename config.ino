@@ -31,12 +31,12 @@ debug_to_serial=no
 /**
 * Max number of setting we can have in the config file
 */
-#define MAX_SETTINGS 17
+#define MAX_SETTINGS 24
 
 /**
 * Char array to hold each line of the config file, we ignore lines starting with ';' 
 */
-char loggerSettings[MAX_SETTINGS][70]= {"", "", "", "", "", "", "", "", "", "", "", "", "","","","",""};
+char loggerSettings[MAX_SETTINGS][70]= {"", "", "", "", "", "", "", "", "", "", "", "", "","","","","",""};
 
 /**
 * Total number of settings loaded
@@ -92,10 +92,10 @@ void loadConfig()
      }     
     }
     //finish off last line ending if there was nor line ending in config file
-    if (fileBufPos!=0 && fileLine<10) {
+    /*if (fileBufPos!=0 && fileLine<10) {
       loggerSettings[fileLine][fileBufPos] = '\0';
       fileLine++;
-    }
+    }*/
     
     settingsCount = fileLine;
    
@@ -156,7 +156,9 @@ void loadGlobalSettings() {
   
   logToSDCard = !getConfigSettingAsBool("disable_sd_logging");
   allowDataSend = !getConfigSettingAsBool("disable_data_send");
-  debugToSerial = getConfigSettingAsBool("debug_to_serial");
+  if (DEBUG_SLAVE_SERIAL==0) {
+    debugToSerial = getConfigSettingAsBool("debug_to_serial");
+  } 
   
   unsigned long sI = getConfigSettingAsInt("send_interval_sec");
   if (sI<1) sI = defaultSendDataIntervalSecs;

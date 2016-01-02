@@ -22,7 +22,7 @@ float thermocoupleInternalCelsius2 = 0.00;
 * objects for lib classes
 */
 //Adafruit_MAX31855 thermocouple2(thermoCLK2, thermoCS2, thermoDO2);
-SoftwareSerial thermocouple2Serial(10,11);
+SoftwareSerial thermocouple2Serial(10,33);
 
 short tc2Pos = 0; // position in read buffer
 char tc2Buffer[MAX_STRING_DATA_LENGTH + 1];
@@ -68,6 +68,7 @@ void processThermocouple2Response()
 
 void processThermocouple2Serial()
 {
+ // thermocouple2Serial.listen();
   while (thermocouple2Serial.available() > 0)
   {
     tc2InByte = thermocouple2Serial.read();

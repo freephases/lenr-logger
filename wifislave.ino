@@ -36,12 +36,17 @@ void processSalveResponse()
 {
   char recordType = wifiBuffer[0];
 
+  
+  
   switch (recordType) {
     case 'E' :  //ERROR WITH REQUEST
       if (debugToSerial) {
         Serial.print("slave error: ");
         Serial.println(getValue(wifiBuffer, '|', 1));
+        
       }
+      lcdSlaveMessage('m', getValue(wifiBuffer, '|', 1));
+      //lcdSlaveError('m', getValue(wifiBuffer, '|', 1));
       waitingForResponse = false;
       break;
       
@@ -59,10 +64,30 @@ void processSalveResponse()
         connectionOkLight.on();
         theStreamHasStarted = true;
         wifiStartRequestSuccess = false;
+        //update lcd
+        lcdSlaveMessage('M', "complete  ");
+        delay(200);
+        lcdSlaveMessage('m', "stream started  ");
+        delay(1500);
+        lcdSlaveMessage('C', "ok");
+    
       } else {
         connectionOkLight.on();
       }
       break;
+  }
+}
+
+void checkWifiSerialIsUp()
+{
+  if (wifiWakeUpMillis!=0 && allowDataSend && !handShakeSucessful && millis()-wifiWakeUpMillis>5000) {
+    //wifi slave down
+    lcdSlaveMessage('M', "Error***");    
+    lcdSlaveMessage('m', "wifi error******");
+    delay(4000);
+    lcdSlaveMessage('C', "ok");    
+    allowDataSend = false;
+    wifiWakeUpMillis = 0;
   }
 }
 
@@ -71,8 +96,10 @@ void processSalveResponse()
  */
 void processWifiSlaveSerial()
 {
+  checkWifiSerialIsUp();
   while (Serial3.available() > 0)
   {
+    wifiWakeUpMillis = 0;
     // read the incoming byte:
     inByte = Serial3.read();
     if (inByte=='\r') continue;
@@ -264,7 +291,7 @@ void sendPlotlyDataToWifiSlave() {
 
 void setupWifiSlave() {
   Serial3.begin(9600);//slaves serial
-  Serial2.begin(9600);//feed back slaves main serial if you wire up 0 and 1 back to mega serial 2 ports
+  
   getConfigSetting("SSID").toCharArray(wifiSSID, 30);
   getConfigSetting("password").toCharArray(wifiPassword, 20);
     

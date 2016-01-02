@@ -1,6 +1,8 @@
 /**
 * LENR logger pressure related monitoring functions
 */
+
+// TODO:  calibration, get system voltage / 1023
 int pressurePsi = 0;
 int pressureRawV = 0;
 const int pressurePort = A12;
@@ -17,7 +19,7 @@ void readPressure()
 {
   /*
   Pressure Range:  -14.5~30 PSI
-  Input :5VDC
+  Input :5.0VDC (last mesured, using own varible VR's so can set voltage
   Output: 0.5-4.5V linear voltage output .
   */
   if (millis() - readPressureMillis >= readPressureInterval) {

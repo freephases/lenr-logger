@@ -34,14 +34,17 @@ void lcdSlaveMessage(char c, String msg)
 
 }
 
-
-/*void lcdSlaveError(String msg)
+/**
+* Display error view, user needs to hit escape to remove message
+* currently not used
+*/
+void lcdSlaveError(String msg)
 {
   char tmpMsg[17];
   msg.toCharArray(tmpMsg, 17);
   sprintf(lcdSlaveMsg, "E|%s|!", tmpMsg);
   Serial2.println(lcdSlaveMsg);
-}*/
+}
 
 void lcdSlaveSendData()
 {

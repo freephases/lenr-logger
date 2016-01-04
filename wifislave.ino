@@ -29,58 +29,75 @@ void wifiSlaveRequestBegin()
 }
 
 /**
-* Execute actions based on the slaves response
-* Record types are E for Error and O for OK, anything else is ignored
+* Manage OK responses from slave
 */
-void processSalveResponse()
+void wifiSlaveManageResponse()
 {
-  char recordType = wifiBuffer[0];
+  if (debugToSerial) {
+        Serial.println("OK");
+      }
+  waitingForResponse = false;
 
-  
-  
-  switch (recordType) {
-    case 'E' :  //ERROR WITH REQUEST
-      if (debugToSerial) {
+  if (wifiStartRequested) {
+    wifiStartRequested = false;
+    wifiStartRequestSuccess = true;
+    startPlotting();
+  } else if (wifiStartRequestSuccess) {
+    connectionOkLight.on();
+    theStreamHasStarted = true;
+    wifiStartRequestSuccess = false;
+    //update lcd
+    lcdSlaveMessage('M', "complete  ");
+    delay(200);
+    lcdSlaveMessage('m', "stream started  ");
+    delay(1500);
+    lcdSlaveMessage('C', "ok");
+
+  } else {
+    connectionOkLight.on();
+  }
+}
+
+/**
+* Manage Errors responses from wifi slave
+*/
+void wifiSlaveManageError()
+{
+  if (debugToSerial) {
         Serial.print("slave error: ");
         Serial.println(getValue(wifiBuffer, '|', 1));
         
       }
-      lcdSlaveMessage('m', getValue(wifiBuffer, '|', 1));
-      //lcdSlaveError('m', getValue(wifiBuffer, '|', 1));
+      lcdSlaveMessage('M', "ERROR  *********");
+      lcdSlaveError(getValue(wifiBuffer, '|', 1));
       waitingForResponse = false;
+}
+
+/**
+* Execute actions based on the slaves response
+* Record types are E for Error and O for OK, anything else is ignored at the mo 
+*/
+void processSalveResponse()
+{
+  char recordType = wifiBuffer[0];  
+  
+  switch (recordType) {
+    case 'E' :  //ERROR WITH REQUEST
+      wifiSlaveManageError();
       break;
       
-    case 'O' : // REQUEST OK
-      if (debugToSerial) {
-        Serial.println("OK");
-      }
-      waitingForResponse = false;
-
-      if (wifiStartRequested) {
-        wifiStartRequested = false;
-        wifiStartRequestSuccess = true;
-        startPlotting();
-      } else if (wifiStartRequestSuccess) {
-        connectionOkLight.on();
-        theStreamHasStarted = true;
-        wifiStartRequestSuccess = false;
-        //update lcd
-        lcdSlaveMessage('M', "complete  ");
-        delay(200);
-        lcdSlaveMessage('m', "stream started  ");
-        delay(1500);
-        lcdSlaveMessage('C', "ok");
-    
-      } else {
-        connectionOkLight.on();
-      }
+    case 'O' : // REQUEST OK      
+      wifiSlaveManageResponse();
       break;
   }
 }
 
+/**
+* Make sure wifi card serial is working if enabled (i.e wifi option siwtch is off on front pannel)
+*/
 void checkWifiSerialIsUp()
 {
-  if (wifiWakeUpMillis!=0 && allowDataSend && !handShakeSucessful && millis()-wifiWakeUpMillis>5000) {
+  if (allowDataSend && !handShakeSucessful && wifiWakeUpMillis!=0 && millis()-wifiWakeUpMillis>5000) {
     //wifi slave down
     lcdSlaveMessage('M', "Error***");    
     lcdSlaveMessage('m', "wifi error******");
@@ -100,7 +117,7 @@ void processWifiSlaveSerial()
   checkWifiSerialIsUp();
   while (Serial3.available() > 0)
   {
-    wifiWakeUpMillis = 0;
+    
     // read the incoming byte:
     inByte = Serial3.read();
     if (inByte=='\r') continue;
@@ -112,7 +129,7 @@ void processWifiSlaveSerial()
 
     if (!handShakeSucessful && haveConnected && inByte == '\n') {
       handShakeSucessful = true;
-
+    
       if (debugToSerial) {
         Serial.println("Connected to slave");
       }
@@ -155,10 +172,7 @@ boolean waitForResponse(unsigned long defWaitTime=0)
   if (defWaitTime==0) defWaitTime = sendDataInterval-250;
   if (defWaitTime<1000) defWaitTime = 1000;
   while (waitingForResponse) {
-    doMainLoops();
-    if (DEBUG_SLAVE_SERIAL == 1) {
-      processDebugSlaveSerial();// for debug only
-    }
+    doMainLoops();    
     if (millis() - waitStartMillis > defWaitTime) {
       waitingForResponse = false; //timeout after sendDataInterval-250 so secs ;) so we can continue as normal...
       timedOut = true;
@@ -244,14 +258,23 @@ void plotByToken(char *token, float value) {
   waitForResponse();
 }
 
+/**
+* Retirns true if the stream has started
+*/
 boolean canSendData() {
   return theStreamHasStarted;
 }
 
+/**
+* Returns true if still waiting for a respose from the slave
+*/
 boolean isWaitingForResponse() {
   return waitingForResponse;
 }
 
+/**
+* Send request to wifi slave to send request to plotly
+*/
 void sendPlotlyDataToWifiSlave() {
   int tokenToUse = 0; // increment enabled sensors to match list of plotly_tokens, no error checking yet so need make sure run file on sd card is correct
   //Send temp
@@ -289,7 +312,9 @@ void sendPlotlyDataToWifiSlave() {
 
 }
 
-
+/**
+* Setup -  do stuff before the dance begins (shame i'll never know when the fat lady will sing or do anything when it happens!)
+*/
 void setupWifiSlave() {
   Serial3.begin(9600);//slaves serial
   
@@ -298,6 +323,9 @@ void setupWifiSlave() {
     
 }
 
+/**
+* Returns true if we have valid and active plotly
+*/
 boolean getTheStreamHasStarted() {
   return theStreamHasStarted;
 }

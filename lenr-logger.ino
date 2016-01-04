@@ -1,8 +1,6 @@
 /**
 * LENR logger
 *
-* Jan 2016
-* Version: 0.0.1.6
 *
 * Uses:
 *  - Arduino Mega ATmega1280
@@ -117,41 +115,13 @@ String getToken(int index)
 }
 
 
-
-/**
-* Dump debug info
-*/
-void dumpDebug() {
-  //Dump debug info
-  Serial.print("Reactor core temp: ");
-  Serial.print(getThermocoupleAvgCelsius1());
-  Serial.println(" Celsius");
-  Serial.print("Room temp: ");
-  Serial.print(getThermocoupleAvgCelsius2());
-  Serial.println(" Celsius");
-  Serial.print("Reactor pressure: ");
-  Serial.print(getPressurePsi());
-  Serial.println(" PSI");
-  Serial.print("Power: ");
-  Serial.print(getPower());
-  Serial.print(" W, ");
-  Serial.print(getVrms());
-  Serial.println(" Vrms, ");
-  Serial.print(getIrms());
-  Serial.println(" Irms, ");
-}
-
-
 /**
 * Send the data to slave or serial, depending on config settings
 */
 void sendData() {
   if (sendDataMillis == 0 || millis() - sendDataMillis >= sendDataInterval) {
     sendDataMillis = millis();
-
-  if (debugToSerial) {
-    dumpDebug();
-  }
+  
     if (logToSDCard) {
       saveCsvData();
     }
@@ -176,12 +146,8 @@ void readSensors() {
   readThermocouple1();
   readThermocouple2();
   readPressure();
-  // readPower();<<moved to mini pro now sent via Serial1
-
+  
   //todo add more sensor readings....
-
-
-  // readThermopileArray
   // readGeigerCounter
 
 }
@@ -203,29 +169,18 @@ void manageSerial() {
 /**
 * Things to call when not sending data, called by other functions not just loop()
 */
-void doMainLoops() {
+void doMainLoops() 
+{
   manageSerial();
   readSensors();
   powerheaterLoop();
 }
 
 /**
-* Set up
-*/
-void setup() {
-
-  Serial.begin(9600); // main serial ports used for debugging or sending raw CSV over USB
-  debugSetup();
-  
-  
-  connectionOkLight.on(); //tell the user we are alive
-
-  if (debugToSerial) {
-    
-    Serial.println("LENR logger"); // send some info on who we are
-    Serial.println("");//clear
-  }
-  
+* Sensor and control components set up
+**/
+void setupDevices()
+{
   //set up lcd slave
   setupLcdSlave();
   delay(100);
@@ -243,12 +198,11 @@ void setup() {
   setupPressure();   
    delay(1000);
   lcdSlaveMessage('m', " power..........");
-  powerSlaveSetup();
-  
-  powerheaterSetup();
- 
+  powerSlaveSetup();  
+  powerheaterSetup(); 
   delay(3000);
-
+  
+  //display connent to wifi if enabled
   if (allowDataSend) {
     lcdSlaveMessage('M', "wifi    ");    
     lcdSlaveMessage('m', "plotly stream...");
@@ -262,6 +216,7 @@ void setup() {
     Serial3.println("******");//tell wifi slave we are here
     Serial3.flush();
   } else {
+    //ready to go as no internet required or availible
     lcdSlaveMessage('M', "complete  ");
     delay(33);
     lcdSlaveMessage('m', "................");
@@ -271,12 +226,25 @@ void setup() {
 }
 
 /**
+* Set up
+*/
+void setup()
+{
+  Serial.begin(9600); // main serial ports used for debugging or sending raw CSV over USB for PC processing
+  connectionOkLight.on(); //tell the user we are alive
+  Serial.println("");//clear
+  Serial.println("");
+  Serial.print("i|LENR logger v"); // send some info on who we are, i = info, using pipes for delimiters, cool man!
+  Serial.print(getVersion());
+  Serial.println(";");  
+  setupDevices();  
+  Serial.println("i|started");
+}
+
+/**
 * Main loop
 */
 void loop() {
   doMainLoops();
   sendData();  
-#if DEBUG_SLAVE_SERIAL == 1
-  processDebugSlaveSerial();// for debug only
-#endif
 }

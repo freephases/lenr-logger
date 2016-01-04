@@ -3,16 +3,16 @@
 * gets temp via serial from mini pro 
 */
 //settings
-const int thermoDO2 = 41;
-const int thermoCS2 = 40;
-const int thermoCLK2 = 39;
+//const int thermoDO2 = 41;
+//const int thermoCS2 = 40;
+//const int thermoCLK2 = 39;
 //const int thermocoupleMaxRead2 = 10; // number of readings to take before creating avg value
-const long readThermocoupleInterval2 = 1000;//read every 500 millisecs
+//const long readThermocoupleInterval2 = 1000;//read every 500 millisecs
 
 
 //vars
-int thermocoupleReadCount2 = 0; // number of times sensor has been read
-float thermocoupleTotalReadingCelsius2 = 0.000; //total readings to avg
+//int thermocoupleReadCount2 = 0; // number of times sensor has been read
+//float thermocoupleTotalReadingCelsius2 = 0.000; //total readings to avg
 //float thermocoupleTotalReadingFahrenheit2 = 0.000; //total readings to avg
 unsigned long readThermocoupleMillis2 = 0; // last milli secs since last avg reading
 float thermocoupleAvgCelsius2 = -200.000; // thermocoupleTotalReadingCelsius div thermocoupleReadCount

@@ -2,18 +2,13 @@
 * LENR logger thermocouple 1 - reactor core temp - related functions
 */
 //settings
-const int thermoDO1 = 3;
+const int thermoDO1 = 3; //same as TC2
 const int thermoCS1 = 4;
-const int thermoCLK1 = 5;
+const int thermoCLK1 = 5; //same as TC2
 const int thermocoupleMaxRead1 = 10; // number of readings to take before creating avg value
 const long readThermocoupleInterval1 = 100;//read every 500 millisecs
-/**
-* LL_TC_USE_AVG
-* set to one for TC's to use averages
-*/
-#define LL_TC_USE_AVG 1
 
-//vars
+//runtime vars
 int thermocoupleReadCount1 = 0; // number of times sensor has been read
 float thermocoupleTotalReadingCelsius1 = 0.000; //total readings to avg
 //float thermocoupleTotalReadingFahrenheit1 = 0.000; //total readings to avg
@@ -52,3 +47,5 @@ float getThermocoupleAvgCelsius1()
 {
   return thermocoupleAvgCelsius1;
 }
+
+

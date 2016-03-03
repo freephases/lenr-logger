@@ -20,16 +20,23 @@ void heaterOn()
 {
   heaterPowerControl.on();
   heaterPowerControl2.on();
+
+  if (controlHbridge) {
+    hBridgeTurnOn();
+  }
 }
 void heaterOff()
 {
   heaterPowerControl.off();
   heaterPowerControl2.off();
+  if (controlHbridge) {
+    hBridgeTurnOff();
+  }
 }
 
 void powerheaterSetup()
 {
-  heaterOff();  
+  heaterOff();
   powerOnTemp = getConfigSettingAsFloat("power_on_temp", powerOnTemp);
   powerOffTemp = getConfigSettingAsFloat("power_off_temp", powerOffTemp);
   if (getConfigSettingAsInt("run_time_mins", 0) == 0) {
@@ -47,7 +54,7 @@ void powerheaterLoop()
 
   if (powerHeaterAutoMode && millis() - powerheaterMillis >= powerheaterCheckInterval) {
     powerheaterMillis = millis();
-    
+
     if (runTimeMillis != 0 && millis() - runTimeMillis >= maxRunTimeAllowedMillis)  {
       heaterTimedOut = true;
       heaterOff();
@@ -63,7 +70,7 @@ void powerheaterLoop()
         if (runTimeMillis == 0) {
           if (maxRunTimeAllowedMillis == 0) {
             heaterTimedOut = true;
-          } else {       
+          } else {
             //run has started
             runTimeMillis = millis();
           }
@@ -71,9 +78,9 @@ void powerheaterLoop()
       }
 
     } else {
-      // heater off...    
-      if (!experimentJustStarted && getThermocoupleAvgCelsius1() <= powerOnTemp) {        
-          heaterOn();        
+      // heater on...
+      if (!experimentJustStarted && getThermocoupleAvgCelsius1() <= powerOnTemp) {
+        heaterOn();
       }
     }
   }
@@ -84,16 +91,18 @@ void startRun()
 {
   if (!heaterPowerControl.getIsOn()) {
     heaterTimedOut = false;
-    if(powerHeaterAutoMode) {
-            if (allowDataSend && !getTheStreamHasStarted()) return;
-              heaterOn();
-              experimentJustStarted = false;
-              lcdSlaveMessage('R', "ok");
-            
+    if (powerHeaterAutoMode) {
+      if (allowDataSend && !getTheStreamHasStarted()) {
+        return;
+      }
+      heaterOn();
+      experimentJustStarted = false;
+      lcdSlaveMessage('R', "ok");
+
     } else { //!allowDataSend) {
       //manual mode
       heaterOn();
-     heaterTimedOut = true;//no timmer 
+      heaterTimedOut = true;//no timmer
       lcdSlaveMessage('R', "ok");
     }
   }
@@ -103,7 +112,7 @@ void startRun()
 void stopRun()
 {
   if (heaterPowerControl.getIsOn()) {
-    heaterOff();    
+    heaterOff();
     heaterTimedOut = true;
     runTimeMillis = 0;
     experimentJustStarted = true;
@@ -114,9 +123,9 @@ void stopRun()
 void setPowerHeaterAutoMode(boolean autoMode)
 {
   powerHeaterAutoMode = autoMode;
-  if (autoMode) 
+  if (autoMode)
     lcdSlaveMessage('A', "ok"); // auto set ok
- else
+  else
     lcdSlaveMessage('a', "ok"); // manual set ok
 }
 
@@ -127,23 +136,23 @@ boolean getPowerHeaterAutoMode()
 
 boolean hasRunStarted()
 {
-  return (runTimeMillis!=0);
+  return (runTimeMillis != 0);
 }
 
 int getMinsToEndOfRun()
 {
-  
+
   if (hasRunStarted()) {
-    return (int) (maxRunTimeAllowedMillis/60000) - (millis()-runTimeMillis/60000);
+    return (int) (maxRunTimeAllowedMillis / 60000) - (millis() - runTimeMillis / 60000);
   } else {
-     return (int) (maxRunTimeAllowedMillis/60000);
+    return (int) (maxRunTimeAllowedMillis / 60000);
   }
 }
 
 int getTotalRunMins()
 {
   if (hasRunStarted()) {
-   return (int) (millis()-runTimeMillis)/60000;
+    return (int) (millis() - runTimeMillis) / 60000;
   } else {
     return 0;
   }

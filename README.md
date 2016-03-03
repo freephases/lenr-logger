@@ -3,8 +3,8 @@ Arduino Based Logger
 
 
 LENR logger
-Jan 2015
-Version: 0.0.1.6
+Mar 2016
+Version: 0.0.1.7
 
 Uses:
 - Arduino Mega ATmega1280
@@ -18,3 +18,4 @@ _ SD card compatible with SD and SPI libs
 - SSR to control heater power supply (see powerheater tab)
 - Arduino Pro Mini with Lcd and keypad to display basic values and control PID/SSR run and stop
   runs https://github.com/freephases/lenr-logger-lcd.git
+- added h-bridge control via another MC as alturnitive or can be as at same time as SSR control

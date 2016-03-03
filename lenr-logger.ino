@@ -61,6 +61,12 @@
 #include "logger.h"
 
 /**
+* LL_TC_USE_AVG
+* set to one for TC's to use averages
+*/
+#define LL_TC_USE_AVG 1
+
+/**
 * Led to signal we are working, using digital pin 30 on Mega connected to 5v green LED
 */
 OnOff connectionOkLight(30);
@@ -105,7 +111,14 @@ char traceToken[11];
 
 unsigned long wifiWakeUpMillis = 0;
 
-
+/**
+* Display power from hbridge instead of AC
+*/
+boolean displayDCPower = true; 
+/**
+* Send control commands to h-bridge as well as default SSR (can unplug SSR if not needed)
+*/
+boolean controlHbridge = true; 
 /**
 * Get a plotly token from our piped list in the config file, 0 being the first
 */
@@ -164,6 +177,7 @@ void manageSerial() {
 
   //processPowerSlaveSerial();
   processLcdSlaveSerial();
+  processHbridgeSerial();
 }
 
 /**
@@ -192,15 +206,19 @@ void setupDevices()
   delay(700);
   //Call our sensors setup funcs  
   lcdSlaveMessage('m', " thermocouples..");
-  thermocouple2Setup();
   delay(1000);
   lcdSlaveMessage('m', " pressure.......");
   setupPressure();   
    delay(1000);
   lcdSlaveMessage('m', " power..........");
   powerSlaveSetup();  
+   delay(1000);
+  lcdSlaveMessage('m', " SSR...........");
   powerheaterSetup(); 
-  delay(3000);
+  delay(500);
+  lcdSlaveMessage('m', " H-Bridge.....");
+  hBridgeSetup();  
+  delay(1000);
   
   //display connent to wifi if enabled
   if (allowDataSend) {

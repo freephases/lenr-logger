@@ -52,8 +52,12 @@ String getCsvString(char delimiter = ',', boolean addMillis = true)
     if (ret.length()>0) ret = ret + delimiter;
      ret = ret + tmp;
    }
-   if (isSensorEnabled("Power")) {
-    
+   if (isSensorEnabled("Power") && displayDCPower) {
+      dtostrf(getHbridgeWatts(),2,3,s_);
+     String tmp = String(s_);
+    if (ret.length()>0) ret = ret + delimiter;
+     ret = ret + tmp;
+   } else if (isSensorEnabled("Power")) {    
      dtostrf(getPower(),2,3,s_);
      String tmp = String(s_);
     if (ret.length()>0) ret = ret + delimiter;

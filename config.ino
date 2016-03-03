@@ -26,6 +26,8 @@ power_on_temp=999.9
 power_off_temp=1000.5
 run_time_mins=120
 debug_to_serial=no
+;switch ac with SSR or no to use DC and h-bridge
+switch_ac=no
 */
 
 /**
@@ -159,6 +161,9 @@ void loadGlobalSettings() {
   if (DEBUG_SLAVE_SERIAL==0) {
     debugToSerial = getConfigSettingAsBool("debug_to_serial");
   } 
+  
+  displayDCPower = (getConfigSettingAsBool("switch_ac")==false);
+  controlHbridge = displayDCPower;  
   
   unsigned long sI = getConfigSettingAsInt("send_interval_sec");
   if (sI<1) sI = defaultSendDataIntervalSecs;

@@ -157,9 +157,8 @@ void sendData() {
 */
 void readSensors() {
   readThermocouple1();
-  readThermocouple2();
   readPressure();
-  
+  readThermocouple2();
   //todo add more sensor readings....
   // readGeigerCounter
 
@@ -206,7 +205,7 @@ void setupDevices()
   delay(700);
   //Call our sensors setup funcs  
   lcdSlaveMessage('m', " thermocouples..");
-  delay(1000);
+  delay(1000); // wait for MAX chips to stabilize
   lcdSlaveMessage('m', " pressure.......");
   setupPressure();   
    delay(1000);

@@ -37,7 +37,7 @@ void processHbridgeResponse()
       setHbridgeInfo();
       break;
     case 'O' :
-     // ok 
+     // ok //todo make LCD show a response somehow
        break;
   }
 }

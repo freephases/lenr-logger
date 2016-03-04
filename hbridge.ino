@@ -1,3 +1,7 @@
+/**
+* H-bridge interface for sudoac device 
+* see: https://github.com/freephases/sudoac
+*/
 SoftwareSerial hBridgeSerial(11, 9);
 short hbPos = 0; // position in read buffer
 char hbBuffer[MAX_STRING_DATA_LENGTH + 1];
@@ -7,7 +11,7 @@ float hbAmps = 0.00;
 
 
 /**
-* Set emontx struct
+* Set Amps and watts sent by sudoac client
 */
 void setHbridgeInfo() {
   char buf[15];
@@ -61,7 +65,7 @@ void processHbridgeResponse()
 void processHbridgeSerial()
 {
   
- // hBridgeSerial.listen();
+ // hBridgeSerial.listen();//can't get this to work on mega 1280 so limited to one software serial port
   
   while (hBridgeSerial.available() > 0)
   {

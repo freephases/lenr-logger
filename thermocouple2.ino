@@ -5,9 +5,7 @@
 *      https://learn.adafruit.com/calibrating-sensors/maxim-31855-linearization
 */
 //settings
-const int thermoDO2 = 3;//same as tc1
 const int thermoCS2 = 2;
-const int thermoCLK2 = 5;//same as tc1
 const int thermocoupleMaxRead2 = 10; // number of readings to take before creating avg value
 const long readThermocoupleInterval2 = 100;//read every 100 millisecs
 
@@ -22,7 +20,7 @@ int thermocoupleOffSet2 = 3.08;
 /**
 * objects for lib classes
 */
-Adafruit_MAX31855 thermocouple2(thermoCLK2, thermoCS2, thermoDO2);
+Adafruit_MAX31855 thermocouple2(thermoCLK, thermoCS2, thermoDO);
 
 /**
 * Read reactor thermocouple Celsius value and

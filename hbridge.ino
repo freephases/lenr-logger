@@ -25,6 +25,21 @@ void setHbridgeInfo() {
 
 }
 
+//void handelHbridgeOkResponse()
+//{
+//  char buf[4] = {0,0,0,0};
+//  
+//  getValue(hbBuffer, '|', 1).toCharArray(buf, 3);
+//  switch (buf[0]) {
+//    case '+': 
+//      break;
+//    case '-': 
+//      break;
+//    default:
+//      break;
+//    }
+//}
+
 /**
 * Execute response
 */
@@ -38,6 +53,7 @@ void processHbridgeResponse()
       break;
     case 'O' :
      // ok //todo make LCD show a response somehow
+       //handelHbridgeOkResponse();
        break;
   }
 }

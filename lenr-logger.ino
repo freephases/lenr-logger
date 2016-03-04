@@ -119,6 +119,16 @@ boolean displayDCPower = true;
 * Send control commands to h-bridge as well as default SSR (can unplug SSR if not needed)
 */
 boolean controlHbridge = true; 
+
+/**
+* Thermocouple DO and CLK ports, same for all thermocouples
+*/
+const int thermoDO = 3; //same as TC2
+const int thermoCLK = 5; //same as TC2
+
+
+
+
 /**
 * Get a plotly token from our piped list in the config file, 0 being the first
 */

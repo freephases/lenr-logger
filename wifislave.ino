@@ -293,7 +293,11 @@ void sendPlotlyDataToWifiSlave() {
     tokenToUse++;
   }
   //Send power
-  if (isSensorEnabled("Power")) {
+  if (displayDCPower) {
+    getToken(tokenToUse).toCharArray(traceToken, 11);
+    plotByToken(traceToken, getHbridgeWatts());
+    tokenToUse++;
+  } else if (isSensorEnabled("Power")) {
     getToken(tokenToUse).toCharArray(traceToken, 11);
     plotByToken(traceToken, getPower());
   //  delay(120);

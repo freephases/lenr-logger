@@ -20,6 +20,11 @@
 #define MAX_STRING_DATA_LENGTH 160
 
 /**
+* Maxium length of data reviced from slaves for 1 record/line with less data, help keep mem use down if you use the right one
+*/
+#define MAX_STRING_DATA_LENGTH_SMALL 64
+
+/**
 * Default send interval when setting 'send_interval_sec' is missing from the 'RUN' file on SD card
 */
 const unsigned long defaultSendDataIntervalSecs = 15;

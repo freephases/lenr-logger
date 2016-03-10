@@ -52,9 +52,6 @@
 */
 #include <OnOff.h>
 
-
-//#include <TimerOne.h> //to do
-
 /**
 * Include main defines/settings for logger
 */
@@ -126,8 +123,19 @@ boolean controlHbridge = true;
 const int thermoDO = 3; //same as TC2
 const int thermoCLK = 5; //same as TC2
 
+/**
+* Thermocouple offsets, set by sd card if seting exists, see config
+*/
+int thermocoupleOffSet1 = 2.98;
+int thermocoupleOffSet2 = 3.08;
 
+/**
+* hBridgeSpeed speed, set by sd card if seting exists, see config or
+* by lcd/keypad via lcdslave
+*/
+int hBridgeSpeed = 75;//~3600Hz which is about 500 pluses with AC at 1000Hz; more work todo
 
+float calibratedVoltage = 4.976; //was 4.980 before 2016-01-03; now set by sd card if setting exists
 
 /**
 * Get a plotly token from our piped list in the config file, 0 being the first
@@ -184,7 +192,6 @@ void manageSerial() {
     processWifiSlaveSerial();
   }
 
-  //processPowerSlaveSerial();
   processLcdSlaveSerial();
   processHbridgeSerial();
 }
@@ -221,7 +228,7 @@ void setupDevices()
    delay(1000);
   lcdSlaveMessage('m', " power..........");
   powerSlaveSetup();  
-   delay(1000);
+   delay(500);
   lcdSlaveMessage('m', " SSR...........");
   powerheaterSetup(); 
   delay(500);

@@ -8,7 +8,7 @@ int pressureRawV = 0;
 const int pressurePort = A12;
 const int readPressureInterval = 500;
 unsigned long readPressureMillis = 0;
-const float calibratedVoltage = 4.976; //was 4.980 before 2016-01-03;
+
 int calFactor = 0;
 void setupPressure()
 {

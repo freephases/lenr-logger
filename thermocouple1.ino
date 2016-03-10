@@ -15,7 +15,7 @@ float thermocoupleTotalReadingCelsius1 = 0.000; //total readings to avg
 //float thermocoupleTotalReadingFahrenheit1 = 0.000; //total readings to avg
 unsigned long readThermocoupleMillis1 = 0; // last milli secs since last avg reading
 float thermocoupleAvgCelsius1 = -200.000; // thermocoupleTotalReadingCelsius div thermocoupleReadCount
-int thermocoupleOffSet1 = 2.98;
+
 // -200.000 means reading has not started yet so do not use
 /**
 * objects for lib classes
@@ -60,7 +60,7 @@ void readThermocouple1()
 
     // Check to make sure thermocouple is working correctly.
     if (isnan(rawTemp)) {
-      Serial.println("Something wrong with thermocouple!");
+      //Serial.println("Something wrong with thermocouple!");
     }
     else {
       // Steps 1 & 2. Subtract cold junction temperature from the raw thermocouple temperature.

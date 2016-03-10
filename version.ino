@@ -4,15 +4,15 @@ int getVersionMajorRelease()
 }
 int getVersionMinorRelease()
 {
-  return 1;
+  return 2;
 }
 int getVersionMajorBuild()
 {
-  return 0;
+  return 1;
 }
 int getVersionMinorBuild()
 {
-  return 7;
+  return 1;
 }
 
 String getVersion()

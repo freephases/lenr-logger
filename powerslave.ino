@@ -1,9 +1,10 @@
 /**
 * Power Slave, gets power values over serial from mini pro running 
 * this: https://github.com/freephases/power-serial-slave.git
+* for AC measuring, not used with latest setup when displayDCPower == true
 */
 short psPos = 0; // position in read buffer
-char psBuffer[MAX_STRING_DATA_LENGTH + 1];
+char psBuffer[MAX_STRING_DATA_LENGTH_SMALL + 1];
 char psInByte = 0;
 typedef struct {
   float power, Vrms, Irms;
@@ -50,7 +51,7 @@ void processPowerSlaveResponse()
  */
 void processPowerSlaveSerial()
 {
-  while (Serial1.available() > 0)
+  while (!displayDCPower && Serial1.available() > 0)
   {
     psInByte = Serial1.read();
 

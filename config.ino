@@ -16,29 +16,40 @@ plotly-password=password
 plotly-tokens=dddhfjfj4e|dddhfjfj43|dddhfjf34e|dddhfjfj42
 plotly-token-count=4
 plotly-overwrite=yes
-plotly-max-points=300
+plotly-max-points=3000
 plotly-filename=your_filename_here
 disable_sd_logging=no
-send_interval_sec=15
+send_interval_sec=5
 disable_data_send=no
-;new for power control
-power_on_temp=999.9
-power_off_temp=1000.5
-run_time_mins=120
+;PID programs
+;csv list of values for each program on temp
+power_on_temp=999.9,399.0
+;csv list of values for each program off temp
+power_off_temp=1000.5,399.5
+;csv list of values for each program length in minutes
+run_time_mins=120,60
+;repeat all programs above, 0 = off,
+repeat=0
 debug_to_serial=no
 ;switch ac with SSR or no to use DC and h-bridge
 switch_ac=no
+;hbridge_speed percentage 100=max, 0=min
+hbridge_speed=75
+;thermocouple offsets
+tc1_off_set=0.00
+tc2_off_set=0.00
+cal_voltage=4.957
 */
 
 /**
 * Max number of setting we can have in the config file
 */
-#define MAX_SETTINGS 24
+#define MAX_SETTINGS 26
 
 /**
 * Char array to hold each line of the config file, we ignore lines starting with ';' 
 */
-char loggerSettings[MAX_SETTINGS][70]= {"", "", "", "", "", "", "", "", "", "", "", "", "","","","","",""};
+char loggerSettings[MAX_SETTINGS][70]= {"", "", "", "", "", "", "", "", "", "", "", "", "","","","","","","","","","","","","",""};
 
 /**
 * Total number of settings loaded
@@ -168,5 +179,27 @@ void loadGlobalSettings() {
   unsigned long sI = getConfigSettingAsInt("send_interval_sec");
   if (sI<1) sI = defaultSendDataIntervalSecs;
   sendDataInterval = sI*1000;
+  
+  if (getConfigSettingAsInt("hbridge_speed",-1)!=-1) {
+    hBridgeSpeed = getConfigSettingAsInt("hbridge_speed");
+    if (hBridgeSpeed>100) {
+      hBridgeSpeed = 100;
+    } else if (hBridgeSpeed<0) {
+      hBridgeSpeed = 0;
+    }
+  }
+    
+  if (getConfigSettingAsFloat("tc1_off_set",-999.999)!=-999.999) {
+    thermocoupleOffSet1 = getConfigSettingAsFloat("tc1_off_set");
+  }
+  if (getConfigSettingAsFloat("tc2_off_set",-999.999)!=-999.999) {
+    thermocoupleOffSet2 = getConfigSettingAsFloat("tc2_off_set");
+  }
+    
+  if (getConfigSettingAsFloat("cal_voltage",-999.999)!=-999.999) {
+    calibratedVoltage = getConfigSettingAsFloat("cal_voltage");
+  }
+  
+  
 }
 

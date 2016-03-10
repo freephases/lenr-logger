@@ -18,13 +18,13 @@ void lcdSlaveMessage(char c, String msg)
 
   msg.toCharArray(tmpMsg, 80);
 
-  if (c == 'D' && getPowerHeaterAutoMode()) {
+ /* if (c == 'D' && getPowerHeaterAutoMode()) {
 
     timeLeft = getMinsToEndOfRun();
     totalTime = getTotalRunMins();
     sprintf(timeData, "%d|%d", timeLeft, totalTime);
     sprintf(lcdSlaveMsg, "%c|%s|%s|!", c, tmpMsg, timeData);
-  } else {
+  } else*/ {
     sprintf(lcdSlaveMsg, "%c|%s|!", c, tmpMsg);
   }
 
@@ -50,8 +50,12 @@ void lcdSlaveSendData()
 {
   if (millis() - lastLcdSlaveSendDataMillis > 1075) {
     lastLcdSlaveSendDataMillis = millis();
-    char data[70];
-    getCsvString('|', false).toCharArray(data, 70);
+    char data[80];
+    getCsvString('|', false).toCharArray(data, 80);
+    int minsToEnd = getMinsToEndOfRun();
+    
+    sprintf(data, "%s|%d|%d|%d", data, minsToEnd, getTotalRunMins(minsToEnd), getTotalRunTime());
+    
     lcdSlaveMessage('D', data);
     // sprintf(data, "D|%s|!", data);
     //  Serial2.println(data);
@@ -82,6 +86,10 @@ void processLcdSlaveResponse()
     case 'M' : //set manual mode
       setPowerHeaterAutoMode(false);
       break;
+    case 'H' : //set hbridge speed
+      setHBridgeSpeed(getValue(lcdBuffer, '|', 1).toInt(), true);      
+      break;
+    
   }
 }
 

@@ -4,7 +4,7 @@
 */
 SoftwareSerial hBridgeSerial(11, 9);
 short hbPos = 0; // position in read buffer
-char hbBuffer[MAX_STRING_DATA_LENGTH + 1];
+char hbBuffer[MAX_STRING_DATA_LENGTH_SMALL + 1];
 char hbInByte = 0;
 float hbWatts = 0.00;
 float hbAmps = 0.00;
@@ -76,7 +76,7 @@ void processHbridgeSerial()
     hbBuffer[hbPos] = hbInByte;
     hbPos++;
 
-    if (hbInByte == '\n' || hbPos == MAX_STRING_DATA_LENGTH) //end of max field length
+    if (hbInByte == '\n' || hbPos == MAX_STRING_DATA_LENGTH_SMALL) //end of max field length
     {
       hbBuffer[hbPos - 1] = 0; // delimited
       processHbridgeResponse();
@@ -99,8 +99,7 @@ void hBridgeTurnOff()
 
 
 /**
-* Read room temp thermocouple Celsius value and
-* create avg every thermocoupleReadCount times
+*
 */
 
 float getHbridgeWatts() {
@@ -111,6 +110,21 @@ float getHbridgeAmps() {
   return hbAmps;
 }
 
+
+
+void setHBridgeSpeed(int hbSpeed, boolean fromLcd=false)
+{
+  if (hBridgeSpeed!=hbSpeed) hBridgeSpeed = hbSpeed;
+  String s(hbSpeed);
+  if (!fromLcd) lcdSlaveMessage('H', s); 
+  char buf[10];
+  char speedBuf[4];
+  s.toCharArray(speedBuf, 4);
+  sprintf(buf, "s|%s|!", speedBuf);
+  hBridgeSerial.println(buf);
+}
+
 void hBridgeSetup() {
  hBridgeSerial.begin(9600);
+ setHBridgeSpeed(hBridgeSpeed);
 }

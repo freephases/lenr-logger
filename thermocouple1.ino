@@ -6,8 +6,8 @@
 */
 //settings
 const int thermoCS1 = 4;
-const int thermocoupleMaxRead1 = 10; // number of readings to take before creating avg value
-const long readThermocoupleInterval1 = 100;//read every 100 millisecs
+const int thermocoupleMaxRead1 = LL_TC_AVG_NUM_READINGS; // number of readings to take before creating avg value, see logger.h
+const long readThermocoupleInterval1 = LL_TC_READ_INTERVAL;//read every LL_TC_READ_INTERVAL millisecs
 
 //runtime vars
 int thermocoupleReadCount1 = 0; // number of times sensor has been read
@@ -22,28 +22,6 @@ float thermocoupleAvgCelsius1 = -200.000; // thermocoupleTotalReadingCelsius div
 */
 Adafruit_MAX31855 thermocouple1(thermoCLK, thermoCS1, thermoDO);
 
-/**
-* Read reactor thermocouple Celsius value and
-* create avg every thermocoupleReadCount times
-*/
-void readThermocouple1Old()
-{
-  if (millis() - readThermocoupleMillis1 >= readThermocoupleInterval1) {
-    readThermocoupleMillis1 = millis();
-#if LL_TC_USE_AVG == 1
-    thermocoupleReadCount1++;
-    //thermocoupleAvgCelsius1 = thermocouple1.readCelsius();
-    thermocoupleTotalReadingCelsius1 += thermocouple1.readCelsius();
-    if (thermocoupleReadCount1 == thermocoupleMaxRead1) {
-      thermocoupleAvgCelsius1 = thermocoupleTotalReadingCelsius1 / (float) thermocoupleMaxRead1;
-      thermocoupleReadCount1 = 0;
-      thermocoupleTotalReadingCelsius1 = 0;
-    }
-#else
-    thermocoupleAvgCelsius1 = thermocouple1.readCelsius();
-#endif
-  }
-}
 
 //added Thermocouple Linearization from heypete post http://forums.adafruit.com/viewtopic.php?f=19&t=32086&start=15#p372992
 void readThermocouple1()
@@ -138,7 +116,7 @@ void readThermocouple1()
         correctedTemp = NAN;
       }
 
-
+#if LL_TC_USE_AVG == 1
       thermocoupleTotalReadingCelsius1 += correctedTemp;
       thermocoupleReadCount1++;
       if (thermocoupleReadCount1 == thermocoupleMaxRead1) {
@@ -146,7 +124,9 @@ void readThermocouple1()
         thermocoupleReadCount1 = 0;
         thermocoupleTotalReadingCelsius1 = 0;
       }
-
+#else
+    thermocoupleAvgCelsius1 = correctedTemp;
+#endif
 
     }
   }

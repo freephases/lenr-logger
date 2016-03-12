@@ -7,6 +7,19 @@
 #define DEBUG_SLAVE_SERIAL 0
 
 /**
+* LL_TC_USE_AVG
+* set to one for TC's to use averages
+*/
+#define LL_TC_USE_AVG 1
+
+#define LL_TC_AVG_NUM_READINGS 20
+
+/**
+* TC sensor read interval in millis.
+*/
+#define LL_TC_READ_INTERVAL 50
+
+/**
 * Logging option flags:
 
 #define PAD_CSV_SLAVE 1001 // flay to use for wifi slave, see https://github.com/freephases/wifi-plotly-slave

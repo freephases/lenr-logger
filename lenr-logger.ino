@@ -57,11 +57,6 @@
 */
 #include "logger.h"
 
-/**
-* LL_TC_USE_AVG
-* set to one for TC's to use averages
-*/
-#define LL_TC_USE_AVG 1
 
 /**
 * Led to signal we are working, using digital pin 30 on Mega connected to 5v green LED

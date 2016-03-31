@@ -9,11 +9,12 @@
 *  - Uno runnning with old style wifi card (rev1) - The wifi slave
 *    runs https://github.com/freephases/wifi-plotly-slave
 *  - 5v transducer -14.5~30 PSI 0.5-4.5V linear voltage output
-*  - Arduino Pro Mini with a OpenEnergyMonitor SMD card using analog ports 0-1 only - the power/emon slave
-*    runs https://github.com/freephases/power-serial-slave.git
 *  - SSR to control heater power supply (see powerheater tab)
 *  - Arduino Pro Mini with Lcd and keypad to display basic values and control PID/SSR run and stop
 *    runs https://github.com/freephases/lenr-logger-lcd.git
+*  - GC-10 added as new default option
+*  - OPTIONAL: Arduino Pro Mini with a OpenEnergyMonitor SMD card using analog ports 0-1 only - the power/emon slave
+*    runs https://github.com/freephases/power-serial-slave.git
 *
 *  Copyright (c) 2015-2016 free phases research
 *
@@ -83,7 +84,7 @@ boolean allowDataSend = true;
 /**
 * Send debug messages to serial 0 not good if using USB connection to PC
 */
-boolean debugToSerial = (DEBUG_SLAVE_SERIAL==1);
+boolean debugToSerial = (DEBUG_SLAVE_SERIAL == 1);
 
 /**
 * Data send interval
@@ -104,13 +105,9 @@ char traceToken[11];
 unsigned long wifiWakeUpMillis = 0;
 
 /**
-* Display power from hbridge instead of AC
-*/
-boolean displayDCPower = true; 
-/**
 * Send control commands to h-bridge as well as default SSR (can unplug SSR if not needed)
 */
-boolean controlHbridge = true; 
+boolean controlHbridge = true;
 
 /**
 * Thermocouple DO and CLK ports, same for all thermocouples
@@ -147,7 +144,7 @@ String getToken(int index)
 void sendData() {
   if (sendDataMillis == 0 || millis() - sendDataMillis >= sendDataInterval) {
     sendDataMillis = millis();
-  
+
     if (logToSDCard) {
       saveCsvData();
     }
@@ -177,11 +174,37 @@ void readSensors() {
 
 }
 
+short serial1BufferPos = 0; // position in read buffer
+char serial1Buffer[MAX_STRING_DATA_LENGTH_SMALL + 1];
+char serial1BufferInByte = 0;
+/**
+ * Process serial data sent via serial 1 uses end of line as delimiter
+ */
+void processSerial1()
+{
+  while (Serial1.available() > 0)
+  {
+    serial1BufferInByte = Serial1.read();
+
+    // add to our read buffer
+    serial1Buffer[serial1BufferPos] = serial1BufferInByte;
+    serial1BufferPos++;
+
+    if (serial1BufferInByte == '\n' || serial1BufferPos == MAX_STRING_DATA_LENGTH) //end of max field length
+    {
+      serial1Buffer[serial1BufferPos - 1] = 0; // delimited
+      processSerial1Response();
+      serial1Buffer[0] = '\0';
+      serial1BufferPos = 0;
+    }
+  }
+}
+
 /**
 * Process incomming slave serial data
 */
 void manageSerial() {
-  processPowerSlaveSerial();
+  processSerial1();
 
   if (allowDataSend) {
     processWifiSlaveSerial();
@@ -194,7 +217,7 @@ void manageSerial() {
 /**
 * Things to call when not sending data, called by other functions not just loop()
 */
-void doMainLoops() 
+void doMainLoops()
 {
   manageSerial();
   readSensors();
@@ -213,27 +236,31 @@ void setupDevices()
   delay(300);
   //call sd card setup first to load settings. see sdcard.ino file
   lcdSlaveMessage('m', " SD card........");
-  sdCardSetup();  
+  sdCardSetup();
   delay(700);
-  //Call our sensors setup funcs  
+  //Call our sensors setup funcs
   lcdSlaveMessage('m', " thermocouples..");
   delay(1000); // wait for MAX chips to stabilize
   lcdSlaveMessage('m', " pressure.......");
-  setupPressure();   
-   delay(1000);
-  lcdSlaveMessage('m', " power..........");
-  powerSlaveSetup();  
-   delay(500);
-  lcdSlaveMessage('m', " SSR...........");
-  powerheaterSetup(); 
-  delay(500);
-  lcdSlaveMessage('m', " H-Bridge.....");
-  hBridgeSetup();  
+  setupPressure();
   delay(1000);
-  
+  Serial1.begin(9600);
+#if (SERIAL1_USAGE == S1_EMON)
+  lcdSlaveMessage('m', " power..........");
+#elseif (SERIAL1_USAGE == S1_GC10)
+  lcdSlaveMessage('m', " geiger conter..");
+#endif
+  delay(1000);
+  lcdSlaveMessage('m', " SSR............");
+  powerheaterSetup();
+  delay(500);
+  lcdSlaveMessage('m', " H-Bridge.......");
+  hBridgeSetup();
+  delay(1000);
+
   //display connent to wifi if enabled
   if (allowDataSend) {
-    lcdSlaveMessage('M', "wifi    ");    
+    lcdSlaveMessage('M', "wifi    ");
     lcdSlaveMessage('m', "plotly stream...");
     delay(20);
     setupWifiSlave();
@@ -265,8 +292,8 @@ void setup()
   Serial.println("");
   Serial.print("i|LENR logger v"); // send some info on who we are, i = info, using pipes for delimiters, cool man!
   Serial.print(getVersion());
-  Serial.println(";");  
-  setupDevices();  
+  Serial.println(";");
+  setupDevices();
   Serial.println("i|started");
 }
 
@@ -275,5 +302,5 @@ void setup()
 */
 void loop() {
   doMainLoops();
-  sendData();  
+  sendData();
 }

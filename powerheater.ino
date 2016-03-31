@@ -1,14 +1,11 @@
 /**
-* Heater Power Control, controls SSR to heater power supply
+  Heater Power Control, controls SSR to heater power supply
 */
 const unsigned long powerheaterCheckInterval = 505;
 unsigned long powerheaterMillis = 0;
 OnOff heaterPowerControl(36);
 OnOff heaterPowerControl2(37);
-boolean experimentJustStarted = true;
-boolean heaterTimedOut = false; // true if reached maxRunTimeAllowedMillis
-float powerOffTemp = 1000.1;
-float powerOnTemp = 999.99;
+boolean heaterTimedOut = true; // true if reached maxRunTimeAllowedMillis
 #define PID_MAX_PROGRAMS 6
 float powerOnTemps[PID_MAX_PROGRAMS];
 float powerOffTemps[PID_MAX_PROGRAMS];
@@ -18,19 +15,19 @@ int currentProgram = 0;
 int repeatProgramsBy = 0;
 int repeatProgramsByCount = 0;
 unsigned long currentProgramMillis = 0;
-unsigned long totalRunMillis = 0;
+unsigned long runStartedMillis = 0;
 const unsigned long intervalBeforePower = 60000;
 unsigned long dataStreamStartedMillis = 0;
 boolean powerHeaterAutoMode = true;
 unsigned long totalRunTimeMillis = 0;
-unsigned long millisToFirstProgramTarget = 0;
+unsigned long programsRunStartMillis = 0;
 
 void heaterOn()
-{
+{  
   heaterPowerControl.on();
   heaterPowerControl2.on();
 
-  if (controlHbridge) {    
+  if (controlHbridge) {
     hBridgeTurnOn();
   }
 }
@@ -44,97 +41,139 @@ void heaterOff()
 }
 
 
-
+/**
+* Load power/PID settings
+*/
 void powerheaterSetup()
 {
   heaterOff();
-  //powerOnTemp = getConfigSettingAsFloat("power_on_temp", powerOnTemp);
-  //powerOffTemp = getConfigSettingAsFloat("power_off_temp", powerOffTemp);
+
   repeatProgramsBy = getConfigSettingAsInt("repeat", 0);
   /**
-  * Load the programs to run
+    Load the programs to run
   */
-  //Serial.println(getConfigSetting("run_time_mins"));
-  for(int i=0; i<PID_MAX_PROGRAMS; i++) {
-    
-    if (getValue(getConfigSetting("power_on_temp")+',', ',', i).length()>0) {
+  for (int i = 0; i < PID_MAX_PROGRAMS; i++) {
+
+    if (getValue(getConfigSetting("power_on_temp") + ',', ',', i).length() > 0) {
+
+      if (getValue(getConfigSetting("power_on_temp") + ',', ',', i).toFloat()==NAN) {
+        if (debugToSerial) {
+          Serial.print ("Error reading power_on_temp value: ");
+          Serial.println(getValue(getConfigSetting("power_on_temp") + ',', ',', i));          
+        }
+        break; // bad value, stop processing power_on_temp settings
+      }
       
-      powerOnTemps[i] = getValue(getConfigSetting("power_on_temp")+',', ',', i).toFloat();
-     
-      powerOffTemps[i] = getValue(getConfigSetting("power_off_temp")+',', ',', i).toFloat();
-      if (getValue(getConfigSetting("run_time_mins")+',', ',', i).toInt()==0) maxRunTimeAllowedMillis[i] = 0;
-      else maxRunTimeAllowedMillis[i] = (unsigned long) (60000 * getValue(getConfigSetting("run_time_mins")+',', ',', i).toInt());
+      powerOnTemps[i] = getValue(getConfigSetting("power_on_temp") + ',', ',', i).toFloat();
+      powerOffTemps[i] = getValue(getConfigSetting("power_off_temp") + ',', ',', i).toFloat();
       
+      if (getValue(getConfigSetting("run_time_mins") + ',', ',', i).toInt() == 0) maxRunTimeAllowedMillis[i] = 0;
+      else maxRunTimeAllowedMillis[i] = (unsigned long) (60000 * (unsigned long) getValue(getConfigSetting("run_time_mins") + ',', ',', i).toInt());
+            
       totalRunTimeMillis += maxRunTimeAllowedMillis[i];
-      
-     //  Serial.print(maxRunTimeAllowedMillis[i], DEC);Serial.println(" wwww ");
       powerTempsCount++;
+
+      if (debugToSerial) {
+          Serial.println("Power temp ");
+          Serial.print(powerTempsCount);
+          Serial.print(" added - on: ");
+          Serial.print(powerOnTemps[i], DEC);
+          Serial.print(" off: ");
+          Serial.print(powerOffTemps[i], DEC);
+          Serial.print(" time: ");
+          Serial.println(maxRunTimeAllowedMillis[i]);
+        }
     } else {
-      break;
+      break; // stop processing power/program settings
     }
   }
-    
-//  if (getConfigSettingAsInt("run_time_mins", 0) == 0) {
-//    maxRunTimeAllowedMillis = 0;//
-//  } else {
-//    maxRunTimeAllowedMillis = (unsigned long) 60000 * getConfigSettingAsInt("run_time_mins");
-//  }
+ 
   powerheaterMillis = millis();
 }
 
 
-
-void powerheaterLoop()
+/**
+* Check and switch program to run or end run
+*/
+void checkProgramToRun()
 {
-  if (powerHeaterAutoMode && millis() - powerheaterMillis >= powerheaterCheckInterval) {
-    powerheaterMillis = millis();
     if (currentProgramMillis != 0 && millis() - currentProgramMillis >= maxRunTimeAllowedMillis[currentProgram])  {
       currentProgram++;
-      if (currentProgram==powerTempsCount) {
+      if (currentProgram == powerTempsCount) {
         currentProgram = 0;//reset to first program
         repeatProgramsByCount++;//repeat count
-        if (repeatProgramsBy>0 && repeatProgramsByCount<repeatProgramsBy) {
+        if (repeatProgramsBy > 0 && repeatProgramsByCount < repeatProgramsBy) {
           repeatProgramsByCount++;
-          currentProgramMillis = millis();
-        } else {        
+          
+          currentProgramMillis = 0;//reset current program timer
+        } else {
           repeatProgramsByCount = 0;
-          heaterTimedOut = true;       
+          heaterTimedOut = true;
           heaterOff();
           lcdSlaveMessage('S', "ok");
           return;
         }
       } else {
-        currentProgramMillis = millis();
+        currentProgramMillis = 0;//reset current program timer
       }
     }
-    
-    if (heaterPowerControl.getIsOn()) {
+  
+}
+int getTotalProgramsToRun()
+{
+  return powerTempsCount*repeatProgramsBy;
+}
 
-      //heater is currently on
-      if (getThermocoupleAvgCelsius1() >= powerOffTemps[currentProgram]) {
-        heaterOff();
-        if (millisToFirstProgramTarget==0) 
+
+int getCurrentProgramNum()
+{
+  return (repeatProgramsByCount==0?0:repeatProgramsByCount*powerTempsCount)+currentProgram+1;
+}
+
+
+/**
+* Check temp and turn on/off heater
+*/
+void manageRun()
+{
+  if (heaterTimedOut) {
+    return;// not running
+  }  
+  
+    //heater is currently on
+    if (getThermocoupleAvgCelsius1() >= powerOffTemps[currentProgram]) {
+          
+      
+        if (heaterPowerControl.getIsOn()) {
+          heaterOff();
+        }
+        if (programsRunStartMillis == 0)
         {
-          millisToFirstProgramTarget = millis();
+          programsRunStartMillis = millis();
         }
         if (currentProgramMillis == 0) {
           if (maxRunTimeAllowedMillis[currentProgram] == 0) {
-            heaterTimedOut = true;
+            heaterTimedOut = true;//0 means infinite
           } else {
-            //run time has now started we are at set temp
+            //count down gas started now we are at set temp for current program
             currentProgramMillis = millis();
           }
         }
+      
       }
-
-    } else {
-      // heater on...
-      if (!experimentJustStarted && getThermocoupleAvgCelsius1() <= powerOnTemps[currentProgram]) {        
-        heaterOn();       
-      }
-    }
+    
+   else if (!heaterPowerControl.getIsOn() && getThermocoupleAvgCelsius1() <= powerOnTemps[currentProgram]) {
+      heaterOn();
   }
+}
 
+void powerheaterLoop()
+{
+  if (!heaterTimedOut && powerHeaterAutoMode && millis() - powerheaterMillis >= powerheaterCheckInterval) {
+    powerheaterMillis = millis();
+    checkProgramToRun();
+    manageRun();    
+  }
 }
 
 void startRun()
@@ -143,15 +182,14 @@ void startRun()
     setHBridgeSpeed(hBridgeSpeed);
     heaterTimedOut = false;
     if (powerHeaterAutoMode) {
-      if (allowDataSend && !getTheStreamHasStarted()) {
-        return;
-      }
+      //if (allowDataSend && !getTheStreamHasStarted()) {
+      //  return;
+      //}
       heaterOn();
-      totalRunMillis = millis(); 
-      millisToFirstProgramTarget = 0;
+      runStartedMillis = millis();
+      programsRunStartMillis = 0;
       currentProgramMillis = 0;
-     // currentProgramMillis = millis();
-      experimentJustStarted = false;
+      // currentProgramMillis = millis();
       lcdSlaveMessage('R', "ok");
 
     } else { //!allowDataSend) {
@@ -163,18 +201,17 @@ void startRun()
   }
 }
 
-
 void stopRun()
 {
   if (heaterPowerControl.getIsOn()) {
     heaterOff();
+  }
     heaterTimedOut = true;
     currentProgramMillis = 0;
     repeatProgramsByCount = 0;
-    experimentJustStarted = true;
     lcdSlaveMessage('S', "ok");
-    totalRunMillis = 0;
-  }
+    runStartedMillis = 0;
+    programsRunStartMillis = 0;  
 }
 
 void setPowerHeaterAutoMode(boolean autoMode)
@@ -193,48 +230,29 @@ boolean getPowerHeaterAutoMode()
 
 boolean hasRunStarted()
 {
-  return (millisToFirstProgramTarget != 0);
+  return (programsRunStartMillis != 0);
 }
 
 int getMinsToEndOfRun()
 {
-  unsigned long totalTimeLeft =0;
+  unsigned long totalTimeLeft = 0;
   unsigned long millisNow = millis();
- 
- int repeatTotal = repeatProgramsBy>0?repeatProgramsBy:1;
- 
- totalTimeLeft= totalRunTimeMillis * ((unsigned long) repeatTotal -(unsigned long)  repeatProgramsByCount);
- 
- //totalTimeLeft += millisToFirstProgramTarget;
- 
- // Serial.println(totalTimeLeft, DEC);
-  if (hasRunStarted()) {
-   if (currentProgramMillis>0) totalTimeLeft= totalTimeLeft-(millisNow-currentProgramMillis);  
-   totalTimeLeft = (totalTimeLeft - (millisNow - millisToFirstProgramTarget)) / 60000;//((millis()-totalTimeLeft) - (millis()-currentProgramMillis)) / 60000;
- 
-    return (int) totalTimeLeft;
-  } else {
-    return (totalTimeLeft / 60000);
-  }
+
+  int repeatTotal = repeatProgramsBy > 0 ? repeatProgramsBy : 1;
+  unsigned long totalRunTime = programsRunStartMillis > 0 ? millisNow - programsRunStartMillis : 0;
+  totalTimeLeft = (totalRunTimeMillis * (unsigned long) repeatTotal) - totalRunTime;
+
+  return (int) (totalTimeLeft / 60000);
 }
 
-int getTotalRunMins(int minsToEnd)
+unsigned long getTotalRunningTimeMillis()
 {
-  if (hasRunStarted()) {    
-    unsigned long totalTimeLeft = totalRunTimeMillis/60000;
-    totalTimeLeft = totalTimeLeft-(unsigned long) minsToEnd;
-    return (int) totalTimeLeft;
-  } else {
-    return 0;
-  }
+  return runStartedMillis > 0 ? millis() - runStartedMillis : 0;
 }
 
-int getTotalRunTime()
+int getTotalRunningTimeMins()
 {
-  if (totalRunMillis!=0) {    
-    unsigned long totalTime = totalRunMillis/60000;   
-    return (int) totalTime;
-  } else {
-    return 0;
-  }
+  return runStartedMillis > 0 ? getTotalRunningTimeMillis() / 60000 : 0;
 }
+
+

@@ -3,19 +3,25 @@
 */
 
 
-int pressurePsi = 0;
-int pressureRawV = 0;
+float pressurePsi = 0.000;
+float pressurePsiTotal = 0.000;
+int pressureReadCounter = 0;
+const int pressureReadCount = 4;
+unsigned long pressureRawV = 0;
 const int pressurePort = A12;
-const int readPressureInterval = 500;
+const int readPressureInterval = 250;
 unsigned long readPressureMillis = 0;
 
-int calFactor = 0;
+float calFactor = 0.00;
 void setupPressure()
 {
   //pinMode(pressurePort, INPUT);
-  calFactor = (int) 1023.00/calibratedVoltage;
+  calFactor =  1023.00/calibratedVoltage;
 }
-
+float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
+{
+ return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 void readPressure()
 {
   /*
@@ -26,19 +32,27 @@ void readPressure()
   */
   if (millis() - readPressureMillis >= readPressureInterval) {
     readPressureMillis = millis();
-    pressureRawV = analogRead(pressurePort);
+    pressureRawV += analogRead(pressurePort);
+    //pressurePsi = mapfloat(pressureRawV, (int) calFactor*0.5, (int) calFactor*4.5, -14, 30);
+    //pressurePsiTotal += mapfloat((float)pressureRawV, calFactor*0.5, calFactor*4.5, -14.5, 30.0);
+    pressureReadCounter++;
+    if (pressureReadCounter==pressureReadCount) {
+      int p  = pressureRawV/pressureReadCount;
+      pressurePsi = mapfloat((float)p, calFactor*0.5, calFactor*4.5, -14.5, 30.0);
     
-    pressurePsi = map(pressureRawV, (int)calFactor*0.5, (int) calFactor*4.5, -14, 30);
-    /*if (debugToSerial) {
-      Serial.print("Pressure raw: ");
-      Serial.print(pressureRawV);
+      pressureReadCounter = 0;
+      pressureRawV = 0;
+    if (debugToSerial) {
+     // Serial.print("Pressure raw: ");
+     // Serial.print(pressureRawV);
       Serial.print(", mapped PSI: ");
-      Serial.println(pressurePsi);
-    }*/
+      Serial.println(pressurePsi, DEC);
+    }
+    }
   }
 }
 
-int getPressurePsi()
+float getPressurePsi()
 {
   return pressurePsi;
 }

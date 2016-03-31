@@ -1,11 +1,10 @@
+#if (SERIAL1_USAGE == S1_EMON)
 /**
 * Power Slave, gets power values over serial from mini pro running 
 * this: https://github.com/freephases/power-serial-slave.git
-* for AC measuring, not used with latest setup when displayDCPower == true
+* for AC measuring
 */
-short psPos = 0; // position in read buffer
-char psBuffer[MAX_STRING_DATA_LENGTH_SMALL + 1];
-char psInByte = 0;
+
 typedef struct {
   float power, Vrms, Irms;
 } PayloadTX;     
@@ -35,7 +34,7 @@ void setPowerInfo() {
 /**
 * Execute response
 */
-void processPowerSlaveResponse()
+void processSerial1Response()
 {
   char recordType = psBuffer[0];
 
@@ -46,28 +45,7 @@ void processPowerSlaveResponse()
 
   }
 }
-/**
- * Process serial data sent to master from power slave
- */
-void processPowerSlaveSerial()
-{
-  while (!displayDCPower && Serial1.available() > 0)
-  {
-    psInByte = Serial1.read();
 
-    // add to our read buffer
-    psBuffer[psPos] = psInByte;
-    psPos++;
-
-    if (psInByte == '\n' || psPos == MAX_STRING_DATA_LENGTH) //end of max field length
-    {
-      psBuffer[psPos - 1] = 0; // delimited
-      processPowerSlaveResponse();
-      psBuffer[0] = '\0';
-      psPos = 0;
-    }
-  }
-}
 
 float getPower() {
   return emontx.power;
@@ -83,7 +61,6 @@ float getApparentPower() {
   return  emontx.Vrms * emontx.Irms;
 }
 
-void powerSlaveSetup() {
-  Serial1.begin(9600);//power slaves serial
-}
 
+
+#endif

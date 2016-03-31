@@ -23,6 +23,9 @@ String getCsvStringHeaders()
    if (isSensorEnabled("Pressure")) {
      ret = ret +",\"PSI\"";
    }
+   if (isSensorEnabled("Geiger")) {
+     ret = ret +",\"CPM\"";
+   }
    
    return ret;
 }
@@ -52,19 +55,24 @@ String getCsvString(char delimiter = ',', boolean addMillis = true)
     if (ret.length()>0) ret = ret + delimiter;
      ret = ret + tmp;
    }
-   if (displayDCPower) {
-      dtostrf(getHbridgeWatts(),2,3,s_);
-     String tmp = String(s_);
-    if (ret.length()>0) ret = ret + delimiter;
-     ret = ret + tmp;
-   } else if (isSensorEnabled("Power")) {    
+   
+   if (isSensorEnabled("Power")) {    
      dtostrf(getPower(),2,3,s_);
      String tmp = String(s_);
     if (ret.length()>0) ret = ret + delimiter;
      ret = ret + tmp;
    }
+
    if (isSensorEnabled("Pressure")) {
-     String tmp = String(getPressurePsi());
+     dtostrf(getPressurePsi(),2,3,s_);
+     String tmp = String(s_);
+     if (ret.length()>0) ret = ret + delimiter;
+     ret = ret + tmp;
+   }
+   
+   if (isSensorEnabled("Geiger")) {
+     //dtostrf(geigerGetCpm(),2,3,s_);
+     String tmp = String(geigerGetCpm());
      if (ret.length()>0) ret = ret + delimiter;
      ret = ret + tmp;
    }

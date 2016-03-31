@@ -4,7 +4,19 @@
 /**
 * debug raw serial output of the slave if you add jumpers to rx and tx of slave to tx and rx of the mega serial 2 ports
 */
-#define DEBUG_SLAVE_SERIAL 0
+#define DEBUG_SLAVE_SERIAL 1
+
+
+
+/**
+* Defines for SERIAL1_USAGE, geiger counter or emon client, geiger counter is new default option
+*/
+#define S1_GC10 1 // GC10 geiger counter client
+#define S1_EMON 2 // emon client
+/**
+* SERIAL1_USAGE
+*/
+#define SERIAL1_USAGE S1_GC10
 
 /**
 * LL_TC_USE_AVG

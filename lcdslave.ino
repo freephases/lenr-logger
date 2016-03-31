@@ -54,7 +54,7 @@ void lcdSlaveSendData()
     getCsvString('|', false).toCharArray(data, 80);
     int minsToEnd = getMinsToEndOfRun();
     
-    sprintf(data, "%s|%d|%d|%d", data, minsToEnd, getTotalRunMins(minsToEnd), getTotalRunTime());
+    sprintf(data, "%s|%d|%d|%d|%d", data, minsToEnd, getTotalRunningTimeMins(), getTotalProgramsToRun(), getCurrentProgramNum());
     
     lcdSlaveMessage('D', data);
     // sprintf(data, "D|%s|!", data);

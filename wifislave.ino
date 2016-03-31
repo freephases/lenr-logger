@@ -292,12 +292,7 @@ void sendPlotlyDataToWifiSlave() {
   //  delay(120);
     tokenToUse++;
   }
-  //Send power
-  if (displayDCPower) {
-    getToken(tokenToUse).toCharArray(traceToken, 11);
-    plotByToken(traceToken, getHbridgeWatts());
-    tokenToUse++;
-  } else if (isSensorEnabled("Power")) {
+   if (isSensorEnabled("Power")) {
     getToken(tokenToUse).toCharArray(traceToken, 11);
     plotByToken(traceToken, getPower());
   //  delay(120);
@@ -309,7 +304,14 @@ void sendPlotlyDataToWifiSlave() {
     getToken(tokenToUse).toCharArray(traceToken, 11);
     plotByToken(traceToken, getPressurePsi());
     
-    //tokenToUse++;
+    tokenToUse++;
+  }
+  
+  if (isSensorEnabled("Geiger")) {
+    getToken(tokenToUse).toCharArray(traceToken, 11);
+    plotByToken(traceToken, geigerGetCpm());
+  //  delay(120);
+   // tokenToUse++;
   }
   
    

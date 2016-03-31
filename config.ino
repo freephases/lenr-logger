@@ -9,12 +9,12 @@ Example Settings file contents is...
 SSID=MyWifiNetWork
 password=MyPassword
 ;sensors_enabled piped delimited list,  values are TC1-TC2, Power, Pressure, Light, IR, Geiger
-sensors_enabled=TC1|TC2|Power|Pressure|!
+sensors_enabled=TC1|TC2|Power|Pressure|Geiger|!
 plotly-username=username
 plotly-password=password
 ;tokens piped delimited list for each sensors_enabled in the same order as speicifed in sensors_enabled
-plotly-tokens=dddhfjfj4e|dddhfjfj43|dddhfjf34e|dddhfjfj42
-plotly-token-count=4
+plotly-tokens=dddhfjfj4e|dddhfjfj43|dddhfjf34e|dddhfjfj42|ffee8sjgg
+plotly-token-count=5
 plotly-overwrite=yes
 plotly-max-points=3000
 plotly-filename=your_filename_here
@@ -173,9 +173,8 @@ void loadGlobalSettings() {
     debugToSerial = getConfigSettingAsBool("debug_to_serial");
   } 
   
-  displayDCPower = (getConfigSettingAsBool("switch_ac")==false);
-  controlHbridge = displayDCPower;  
-  
+  controlHbridge = (getConfigSettingAsBool("switch_ac")==false);
+
   unsigned long sI = getConfigSettingAsInt("send_interval_sec");
   if (sI<1) sI = defaultSendDataIntervalSecs;
   sendDataInterval = sI*1000;

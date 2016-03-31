@@ -110,6 +110,14 @@ float getHbridgeAmps() {
   return hbAmps;
 }
 
+#if (SERIAL1_USAGE != S1_EMON)
+  //use Hbridge sensor not emon client
+  float getPower()
+  {
+    return getHbridgeWatts();
+  }
+#endif
+
 
 
 void setHBridgeSpeed(int hbSpeed, boolean fromLcd=false)

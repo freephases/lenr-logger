@@ -22,8 +22,8 @@ disable_sd_logging=no
 send_interval_sec=5
 disable_data_send=no
 ;PID programs
-;csv list of values for each program on temp
-power_on_temp=999.9,399.0
+;csv list of values for each program overstep
+power_oversteps=5.5,10.5
 ;csv list of values for each program off temp
 power_off_temp=1000.5,399.5
 ;csv list of values for each program length in minutes
@@ -39,6 +39,8 @@ hbridge_speed=75
 tc1_off_set=0.00
 tc2_off_set=0.00
 cal_voltage=4.957
+;lowestPowerPercentage
+lowest_power=77
 */
 
 /**

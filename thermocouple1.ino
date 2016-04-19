@@ -1,8 +1,8 @@
 /**
-* LENR logger thermocouple 1 - reactor core temp - related functions
-* see: https://learn.adafruit.com/downloads/pdf/thermocouple.pdf
-*      https://learn.adafruit.com/calibrating-sensors/why-calibrate
-*      https://learn.adafruit.com/calibrating-sensors/maxim-31855-linearization
+  LENR logger thermocouple 1 - reactor core temp - related functions
+  see: https://learn.adafruit.com/downloads/pdf/thermocouple.pdf
+       https://learn.adafruit.com/calibrating-sensors/why-calibrate
+       https://learn.adafruit.com/calibrating-sensors/maxim-31855-linearization
 */
 //settings
 const int thermoCS1 = 4;
@@ -16,9 +16,10 @@ float thermocoupleTotalReadingCelsius1 = 0.000; //total readings to avg
 unsigned long readThermocoupleMillis1 = 0; // last milli secs since last avg reading
 float thermocoupleAvgCelsius1 = -200.000; // thermocoupleTotalReadingCelsius div thermocoupleReadCount
 
+RunningMedian tc1Samples = RunningMedian(thermocoupleMaxRead1);
 // -200.000 means reading has not started yet so do not use
 /**
-* objects for lib classes
+  objects for lib classes
 */
 Adafruit_MAX31855 thermocouple1(thermoCLK, thermoCS1, thermoDO);
 
@@ -112,20 +113,28 @@ void readThermocouple1()
         }
       } else { // NIST only has data for K-type thermocouples from -200C to +1372C. If the temperature is not in that range, set temp to impossible value.
         // Error handling should be improved.
-        Serial.print("Temperature is out of range. This should never happen.");
+        if (debugToSerial) {
+          Serial.print("Temperature is out of range. This should never happen.");
+        }
         correctedTemp = NAN;
       }
 
 #if LL_TC_USE_AVG == 1
-      thermocoupleTotalReadingCelsius1 += correctedTemp;
+      //      thermocoupleTotalReadingCelsius1 += correctedTemp;
+      //      thermocoupleReadCount1++;
+      //      if (thermocoupleReadCount1 == thermocoupleMaxRead1) {
+      //        thermocoupleAvgCelsius1 = (thermocoupleTotalReadingCelsius1 / (float) thermocoupleMaxRead1) - thermocoupleOffSet1;
+      //        thermocoupleReadCount1 = 0;
+      //        thermocoupleTotalReadingCelsius1 = 0;
+      //      }
+      tc1Samples.add(correctedTemp);
       thermocoupleReadCount1++;
       if (thermocoupleReadCount1 == thermocoupleMaxRead1) {
-        thermocoupleAvgCelsius1 = (thermocoupleTotalReadingCelsius1 / (float) thermocoupleMaxRead1) - thermocoupleOffSet1;
         thermocoupleReadCount1 = 0;
-        thermocoupleTotalReadingCelsius1 = 0;
+        thermocoupleAvgCelsius1 = tc1Samples.getMedian() +thermocoupleOffSet1;
       }
 #else
-    thermocoupleAvgCelsius1 = correctedTemp;
+      thermocoupleAvgCelsius1 = correctedTemp;
 #endif
 
     }

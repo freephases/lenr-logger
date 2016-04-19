@@ -1,3 +1,7 @@
+#include <PID_v1.h>
+
+#include <RunningMedian.h>
+
 /**
 * LENR logger
 *
@@ -43,6 +47,8 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SoftwareSerial.h>
+
+#include <math.h>
 /**
 * thermocouple driver/amp lib
 */

@@ -134,5 +134,6 @@ void setHBridgeSpeed(int hbSpeed, boolean fromLcd=false)
 
 void hBridgeSetup() {
  hBridgeSerial.begin(9600);
+ hBridgeTurnOff();
  setHBridgeSpeed(hBridgeSpeed);
 }

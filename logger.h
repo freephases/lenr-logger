@@ -24,12 +24,12 @@
 */
 #define LL_TC_USE_AVG 1
 
-#define LL_TC_AVG_NUM_READINGS 20
+#define LL_TC_AVG_NUM_READINGS 10
 
 /**
 * TC sensor read interval in millis.
 */
-#define LL_TC_READ_INTERVAL 50
+#define LL_TC_READ_INTERVAL 100
 
 /**
 * Logging option flags:
@@ -42,12 +42,12 @@
 /**
 * Maxium length of data reviced from slaves for 1 record/line
 */
-#define MAX_STRING_DATA_LENGTH 160
+#define MAX_STRING_DATA_LENGTH 130
 
 /**
 * Maxium length of data reviced from slaves for 1 record/line with less data, help keep mem use down if you use the right one
 */
-#define MAX_STRING_DATA_LENGTH_SMALL 64
+#define MAX_STRING_DATA_LENGTH_SMALL 54
 
 /**
 * Default send interval when setting 'send_interval_sec' is missing from the 'RUN' file on SD card

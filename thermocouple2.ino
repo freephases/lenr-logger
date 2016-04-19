@@ -16,6 +16,7 @@ float thermocoupleTotalReadingCelsius2 = 0.000; //total readings to avg
 unsigned long readThermocoupleMillis2 = 0; // last milli secs since last avg reading
 float thermocoupleAvgCelsius2 = -200.000; // thermocoupleTotalReadingCelsius div thermocoupleReadCount
 
+RunningMedian tc2Samples = RunningMedian(thermocoupleMaxRead2);
 
 /**
 * objects for lib classes
@@ -117,12 +118,18 @@ void readThermocouple2()
       }
 
 #if LL_TC_USE_AVG == 1
-      thermocoupleTotalReadingCelsius2 += correctedTemp;
+//      thermocoupleTotalReadingCelsius2 += correctedTemp;
+//      thermocoupleReadCount2++;
+//      if (thermocoupleReadCount2 == thermocoupleMaxRead2) {
+//        thermocoupleAvgCelsius2 = (thermocoupleTotalReadingCelsius2 / (float) thermocoupleMaxRead2) - thermocoupleOffSet2;
+//        thermocoupleReadCount2 = 0;
+//        thermocoupleTotalReadingCelsius2 = 0;
+//      }
+tc2Samples.add(correctedTemp);
       thermocoupleReadCount2++;
       if (thermocoupleReadCount2 == thermocoupleMaxRead2) {
-        thermocoupleAvgCelsius2 = (thermocoupleTotalReadingCelsius2 / (float) thermocoupleMaxRead2) - thermocoupleOffSet2;
         thermocoupleReadCount2 = 0;
-        thermocoupleTotalReadingCelsius2 = 0;
+        thermocoupleAvgCelsius2 = tc2Samples.getMedian()+thermocoupleOffSet2;
       }
 #else
     thermocoupleAvgCelsius2 = correctedTemp;

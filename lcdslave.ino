@@ -50,11 +50,11 @@ void lcdSlaveSendData()
 {
   if (millis() - lastLcdSlaveSendDataMillis > 1075) {
     lastLcdSlaveSendDataMillis = millis();
-    char data[80];
-    getCsvString('|', false).toCharArray(data, 80);
+    char data[100], csvStr[70];
+    getCsvString('|', false).toCharArray(csvStr, 70);
     int minsToEnd = getMinsToEndOfRun();
     
-    sprintf(data, "%s|%d|%d|%d|%d", data, minsToEnd, getTotalRunningTimeMins(), getTotalProgramsToRun(), getCurrentProgramNum());
+    sprintf(data, "%d|%d|%d|%d|%d|%s|", minsToEnd, getTotalRunningTimeMins(), getTotalProgramsToRun(), getCurrentProgramNum(), getThermocouplesCount(), csvStr);
     
     lcdSlaveMessage('D', data);
     // sprintf(data, "D|%s|!", data);
@@ -120,6 +120,7 @@ void processLcdSlaveSerial()
 
 void setupLcdSlave()
 {
-  Serial2.begin(9600);
+  //Serial2.begin(9600);
+  Serial2.begin(9600);//lcdslave
   Serial2.println("****");
 }

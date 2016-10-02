@@ -36,8 +36,7 @@ switch_ac=no
 ;hbridge_speed percentage 100=max, 0=min
 hbridge_speed=75
 ;thermocouple offsets
-tc1_off_set=0.00
-tc2_off_set=0.00
+tc_offsets=0.00,0.49
 cal_voltage=4.957
 ;lowestPowerPercentage
 lowest_power=77
@@ -176,6 +175,8 @@ void loadGlobalSettings() {
   } 
   
   controlHbridge = (getConfigSettingAsBool("switch_ac")==false);
+  
+  thermocoupleEnabledCount = getConfigSettingAsInt("tc_enabled_count", thermocoupleEnabledCount);
 
   unsigned long sI = getConfigSettingAsInt("send_interval_sec");
   if (sI<1) sI = defaultSendDataIntervalSecs;
@@ -183,23 +184,26 @@ void loadGlobalSettings() {
   
   if (getConfigSettingAsInt("hbridge_speed",-1)!=-1) {
     hBridgeSpeed = getConfigSettingAsInt("hbridge_speed");
-    if (hBridgeSpeed>100) {
+    if (hBridgeSpeed>100) {//tmp force while testing to 93 - about 190 hz AC sq wave
       hBridgeSpeed = 100;
     } else if (hBridgeSpeed<0) {
       hBridgeSpeed = 0;
     }
   }
-    
-  if (getConfigSettingAsFloat("tc1_off_set",-999.999)!=-999.999) {
-    thermocoupleOffSet1 = getConfigSettingAsFloat("tc1_off_set");
-  }
-  if (getConfigSettingAsFloat("tc2_off_set",-999.999)!=-999.999) {
-    thermocoupleOffSet2 = getConfigSettingAsFloat("tc2_off_set");
+  
+  if (getConfigSettingAsFloat("max_temp",-999.999)!=-999.999) {
+    manualMaxTemp = getConfigSettingAsFloat("max_temp");
   }
     
+   
   if (getConfigSettingAsFloat("cal_voltage",-999.999)!=-999.999) {
     calibratedVoltage = getConfigSettingAsFloat("cal_voltage");
   }
+
+  
+ 
+  
+  
   
   
 }

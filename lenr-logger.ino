@@ -1,3 +1,5 @@
+#include <MAX31855Fix.h>
+
 #include <PID_v1.h>
 
 #include <RunningMedian.h>
@@ -124,14 +126,15 @@ const int thermoCLK = 5; //same as TC2
 /**
 * Thermocouple offsets, set by sd card if seting exists, see config
 */
-int thermocoupleOffSet1 = 2.98;
-int thermocoupleOffSet2 = 3.08;
-
+float manualMaxTemp = 1250.00; // temp we must ever go above - depends on thermocouple
+const int thermocoupleCount = 4;
+int thermocoupleEnabledCount = 4;
+MAX31855Fix *thermocopulesList[thermocoupleCount];
 /**
 * hBridgeSpeed speed, set by sd card if seting exists, see config or
 * by lcd/keypad via lcdslave
 */
-int hBridgeSpeed = 75;//~3600Hz which is about 500 pluses with AC at 1000Hz; more work todo
+int hBridgeSpeed = 10;//~3600Hz which is about 500 pluses with AC at 1000Hz; more work todo
 
 float calibratedVoltage = 4.976; //was 4.980 before 2016-01-03; now set by sd card if setting exists
 
@@ -172,12 +175,8 @@ void sendData() {
 * Read all sensors at given intervals
 */
 void readSensors() {
-  readThermocouple1();
-  readPressure();
-  readThermocouple2();
-  //todo add more sensor readings....
-  // readGeigerCounter
-
+  thermocouplesRead();
+  pressureRead();
 }
 
 short serial1BufferPos = 0; // position in read buffer
@@ -228,6 +227,9 @@ void doMainLoops()
   manageSerial();
   readSensors();
   powerheaterLoop();
+  if (allowDataSend) {   
+    checkWifiSerialIsUp();    //check what's up
+  }
 }
 
 /**
@@ -243,20 +245,17 @@ void setupDevices()
   //call sd card setup first to load settings. see sdcard.ino file
   lcdSlaveMessage('m', " SD card........");
   sdCardSetup();
-  delay(700);
+  delay(400);
   //Call our sensors setup funcs
-  lcdSlaveMessage('m', " thermocouples..");
-  delay(1000); // wait for MAX chips to stabilize
+  thermocouplesSetup();
   lcdSlaveMessage('m', " pressure.......");
   setupPressure();
   delay(1000);
-  Serial1.begin(9600);
-#if (SERIAL1_USAGE == S1_EMON)
+ #if (SERIAL1_USAGE == S1_EMON)
   lcdSlaveMessage('m', " power..........");
 #elseif (SERIAL1_USAGE == S1_GC10)
   lcdSlaveMessage('m', " geiger conter..");
 #endif
-  delay(1000);
   lcdSlaveMessage('m', " SSR............");
   powerheaterSetup();
   delay(500);
@@ -264,24 +263,25 @@ void setupDevices()
   hBridgeSetup();
   delay(1000);
 
+  
   //display connent to wifi if enabled
   if (allowDataSend) {
     lcdSlaveMessage('M', "wifi    ");
     lcdSlaveMessage('m', "plotly stream...");
-    delay(20);
+    wifiWakeUpMillis = millis();
     setupWifiSlave();
+    checkWifiSerialIsUp();    
   }
   sendDataMillis = millis();//set milli secs so we get first reading after set interval
   connectionOkLight.off(); //set light off, will turn on if logging ok, flushing means error
-  if (allowDataSend) {
-    wifiWakeUpMillis = millis();
+  if (allowDataSend) {    
     Serial3.println("******");//tell wifi slave we are here
-    Serial3.flush();
+   // Serial3.flush();
   } else {
     //ready to go as no internet required or availible
-    lcdSlaveMessage('M', "complete  ");
+    lcdSlaveMessage('M', "complete ");
     delay(33);
-    lcdSlaveMessage('m', "................");
+    lcdSlaveMessage('m', "..............");
     delay(1500);
     lcdSlaveMessage('C', "ok");
   }
@@ -293,6 +293,8 @@ void setupDevices()
 void setup()
 {
   Serial.begin(9600); // main serial ports used for debugging or sending raw CSV over USB for PC processing
+  Serial1.begin(9600);//use by GC-10 or old AC power monitor
+
   connectionOkLight.on(); //tell the user we are alive
   Serial.println("");//clear
   Serial.println("");

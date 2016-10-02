@@ -97,11 +97,11 @@ void processSalveResponse()
 */
 void checkWifiSerialIsUp()
 {
-  if (allowDataSend && !handShakeSucessful && wifiWakeUpMillis!=0 && millis()-wifiWakeUpMillis>5000) {
+  if (allowDataSend && !handShakeSucessful && wifiWakeUpMillis!=0 && millis()-wifiWakeUpMillis>3500) {
     //wifi slave down
     lcdSlaveMessage('M', "Error***");    
     lcdSlaveMessage('m', "wifi error******");
-    delay(4000);
+    delay(1000);
     lcdSlaveMessage('C', "ok");    
     allowDataSend = false;
    // setPowerHeaterAutoMode(false);
@@ -278,20 +278,27 @@ boolean isWaitingForResponse() {
 void sendPlotlyDataToWifiSlave() {
   int tokenToUse = 0; // increment enabled sensors to match list of plotly_tokens, no error checking yet so need make sure run file on sd card is correct
   //Send temp
-  //  ..core
-  if (isSensorEnabled("TC1")) {
-    getToken(tokenToUse).toCharArray(traceToken, 11);//select token
-    plotByToken(traceToken, getThermocoupleAvgCelsius1());//send token with our value
-   // delay(120);
-    tokenToUse++;
-  }
-  //  ..room
-  if (isSensorEnabled("TC2")) {
+//  //  ..core
+//  if (isSensorEnabled("TC1")) {
+//    getToken(tokenToUse).toCharArray(traceToken, 11);//select token
+//    plotByToken(traceToken, getControlTcTemp());//send token with our value
+//   // delay(120);
+//    tokenToUse++;
+//  }
+//  //  ..room
+//  if (isSensorEnabled("TC2")) {
+//    getToken(tokenToUse).toCharArray(traceToken, 11);
+//    plotByToken(traceToken, getThermocoupleAvgCelsius2());
+//  //  delay(120);
+//    tokenToUse++;
+//  }
+  
+  for(int i=0; i<getThermocouplesCount(); i++) {
     getToken(tokenToUse).toCharArray(traceToken, 11);
-    plotByToken(traceToken, getThermocoupleAvgCelsius2());
-  //  delay(120);
+    plotByToken(traceToken, thermocopulesList[i]->getTemp());
     tokenToUse++;
   }
+  
    if (isSensorEnabled("Power")) {
     getToken(tokenToUse).toCharArray(traceToken, 11);
     plotByToken(traceToken, getPower());
@@ -323,7 +330,7 @@ void sendPlotlyDataToWifiSlave() {
 */
 void setupWifiSlave() {
   Serial3.begin(9600);//slaves serial
-  
+  delay(30);
   getConfigSetting("SSID").toCharArray(wifiSSID, 30);
   getConfigSetting("password").toCharArray(wifiPassword, 20);
     

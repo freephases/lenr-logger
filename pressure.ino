@@ -59,7 +59,7 @@ void readPressureOLD()
   }
 }
 int count = 0;
-void readPressure()
+void pressureRead()
 {
   //if (count % 20 == 0) Serial.println(F("\nmsec \tAnR \tSize \tCnt \tLow \tAvg \tAvg(3) \tMed \tHigh"));
   count++;

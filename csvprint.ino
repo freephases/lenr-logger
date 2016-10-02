@@ -10,13 +10,14 @@
 String getCsvStringHeaders()
 {
    String ret = String("\"Time\"");
-   
-   if (isSensorEnabled("TC1")) {     
-     ret = ret + ",\"Thermocouple1\"";
-   }
-   if (isSensorEnabled("TC2")) {
-     ret = ret +",\"Thermocouple2\"";
-   }
+     
+//   if (isSensorEnabled("TC1")) {     
+//     ret = ret + ",\"Thermocouple1\"";
+//   }
+//   if (isSensorEnabled("TC2")) {
+//     ret = ret +",\"Thermocouple2\"";
+//   }
+
    if (isSensorEnabled("Power")) {
      ret = ret +",\"Power\"";
    }
@@ -26,6 +27,11 @@ String getCsvStringHeaders()
    if (isSensorEnabled("Geiger")) {
      ret = ret +",\"CPM\"";
    }
+
+    for(int i=0; i<getThermocouplesCount(); i++) {
+     ret = ret + ",\"Thermocouple"+(i+1)+"\"";
+   }
+  
    
    return ret;
 }
@@ -34,7 +40,7 @@ String getCsvStringHeaders()
 /**
 * Get CSV string of all enabled sensor readings
 */
-String getCsvString(char delimiter = ',', boolean addMillis = true)
+String getCsvString(char delimiter = ',', boolean addMillis = true, int maxTCTemps = 0)
 {
   String ret = String("");
   if (addMillis) {
@@ -42,7 +48,8 @@ String getCsvString(char delimiter = ',', boolean addMillis = true)
   } 
   
     char s_[15];
-   if (isSensorEnabled("TC1")) {
+    String tmp;
+   /*if (isSensorEnabled("TC1")) {
      dtostrf(getThermocoupleAvgCelsius1(),2,3,s_);
      String tmp = String(s_);
      if (ret.length()>0) ret = ret + delimiter;
@@ -54,28 +61,40 @@ String getCsvString(char delimiter = ',', boolean addMillis = true)
      String tmp = String(s_);
     if (ret.length()>0) ret = ret + delimiter;
      ret = ret + tmp;
-   }
+   }*/
    
-   if (isSensorEnabled("Power")) {    
+   
+   //if (isSensorEnabled("Power")) {    
      dtostrf(getPower(),2,3,s_);
-     String tmp = String(s_);
+     tmp = String(s_);
     if (ret.length()>0) ret = ret + delimiter;
      ret = ret + tmp;
-   }
+   //} 
 
-   if (isSensorEnabled("Pressure")) {
+   //if (isSensorEnabled("Pressure")) {
      dtostrf(getPressurePsi(),2,3,s_);
-     String tmp = String(s_);
+     tmp = String(s_);
      if (ret.length()>0) ret = ret + delimiter;
      ret = ret + tmp;
-   }
+   //}
    
-   if (isSensorEnabled("Geiger")) {
+   //if (isSensorEnabled("Geiger")) {
      //dtostrf(geigerGetCpm(),2,3,s_);
-     String tmp = String(geigerGetCpm());
+     tmp = String(geigerGetCpm());
      if (ret.length()>0) ret = ret + delimiter;
      ret = ret + tmp;
+   //}
+
+   int maxTcToSend = getThermocouplesCount();
+   if (maxTCTemps!=0) maxTcToSend = maxTCTemps;
+   for(int i=0; i< maxTcToSend; i++) {
+       dtostrf(thermocopulesList[i]->getTemp(),2,3,s_);
+       tmp = String(s_);
+      if (ret.length()>0) ret = ret + delimiter;
+       ret = ret + tmp;     
+       
    }
+  
    
    return ret;
 }

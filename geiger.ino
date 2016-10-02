@@ -10,7 +10,6 @@ int geigerGetCpm()
   return geigerCpm;
 }
 
-
 /**
 * Do something with response from geiger counter
 */

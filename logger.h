@@ -4,7 +4,7 @@
 /**
 * debug raw serial output of the slave if you add jumpers to rx and tx of slave to tx and rx of the mega serial 2 ports
 */
-#define DEBUG_SLAVE_SERIAL 1
+#define DEBUG_SLAVE_SERIAL 0
 
 
 
@@ -22,14 +22,14 @@
 * LL_TC_USE_AVG
 * set to one for TC's to use averages
 */
-#define LL_TC_USE_AVG 1
+#define LL_TC_USE_AVG 0
 
 #define LL_TC_AVG_NUM_READINGS 10
 
 /**
 * TC sensor read interval in millis.
 */
-#define LL_TC_READ_INTERVAL 100
+#define LL_TC_READ_INTERVAL 1000
 
 /**
 * Logging option flags:

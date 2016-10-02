@@ -59,6 +59,10 @@ void processHbridgeResponse()
      // ok //todo make LCD show a response somehow
        //handelHbridgeOkResponse();
        break;
+       
+    case 'E' :
+       lcdSlaveError("OVER POWER");
+       break;
   }
 }
 
@@ -85,7 +89,6 @@ void processHbridgeSerial()
     }
   }
 }
-//todo - not complete pete....
 
 void hBridgeTurnOn()
 {
@@ -122,7 +125,9 @@ float getHbridgeAmps() {
 
 void setHBridgeSpeed(int hbSpeed, boolean fromLcd=false)
 {
+  if (hbSpeed>100) hbSpeed = 100;//99-100 is a blow out
   if (hBridgeSpeed!=hbSpeed) hBridgeSpeed = hbSpeed;
+  
   String s(hbSpeed);
   if (!fromLcd) lcdSlaveMessage('H', s); 
   char buf[10];
